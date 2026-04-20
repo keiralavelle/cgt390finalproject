@@ -2,8 +2,10 @@
 
 import "./Navbar.css";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import logo from "../../assets/fork.png";
 
 const Navbar = () => {
   const { data: session, status } = useSession();
@@ -20,7 +22,10 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <div className="navbar-logo">MealPlanner</div>
+      <div className="navbar-left">
+        <Image src={logo} alt="Logo" width={60} height={60} />
+        <div className="navbar-logo">PantryPal</div>
+      </div>
 
       <ul className="navbar-links">
         {navItems.map((item) => (
