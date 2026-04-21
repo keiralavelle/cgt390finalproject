@@ -589,7 +589,7 @@ export default function Home() {
                     onClick={() => setOpen(false)}
                     disabled={saving}
                   >
-                    Cancel
+                    Cancel 
                   </Button>
                   <Button onClick={saveMeal} disabled={saving || !selectedMealId}>
                     {saving ? "Saving..." : "Save Meal"}
