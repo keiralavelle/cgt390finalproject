@@ -1,6 +1,6 @@
 // src/app/api/meals/[mealId]/favorite/route.js
 import { NextResponse } from "next/server";
-import { toggleFavoriteMeal } from "../../../../lib/meals";
+import { toggleFavoriteMeal } from "../../../../../../lib/meals";
 
 export async function PATCH(req, { params }) {
   const userId = "replace-with-real-auth-user-id";
