@@ -8,7 +8,7 @@ const Favorites = () => {
   return (
     <div className="favorites-page">
       <div className="favorites-container">
-        <div classnName="favorites-header">
+        <div className="favorites-header">
           <h1 className="favorites-title">Favorites</h1>
         </div>
 
