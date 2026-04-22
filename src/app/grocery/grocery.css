@@ -1,81 +1,203 @@
-.grocery-page {
-  min-height: 100vh;
-  background: #ffffff;
-  padding: clamp(16px, 3vw, 32px);
-  box-sizing: border-box;
-}
+/* grocery.css */
 
-.grocery-container {
-  max-width: 700px;
+.grocery-page {
+  padding: var(--space-8) var(--space-6) var(--space-12);
+  max-width: 600px;
   margin: 0 auto;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 24px;
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
-  padding: clamp(18px, 3vw, 28px);
 }
 
 .grocery-header {
-  margin-bottom: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
 }
 
 .grocery-title {
-  margin: 0;
-  font-size: clamp(1.6rem, 2.4vw, 2rem);
-  color: #0f172a;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
-.grocery-subtitle {
-  margin-top: 6px;
-  color: #64748b;
-  font-size: 0.9rem;
+.grocery-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
 }
 
+/* ── Manual add ── */
 .grocery-input-row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .grocery-input {
   flex: 1;
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  padding: 12px;
-  font-size: 0.95rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-text);
   outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
-
 .grocery-input:focus {
-  border-color: #64748b;
-  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.12);
+  border-color: var(--color-primary-mid);
+  box-shadow: 0 0 0 3px rgba(74,124,89,0.15);
 }
+.grocery-input::placeholder { color: var(--color-text-muted); }
 
-.grocery-button {
-  background: #0f172a;
-  color: white;
+.grocery-btn {
+  padding: 10px var(--space-4);
+  border-radius: var(--radius-md);
   border: none;
-  border-radius: 14px;
-  padding: 12px 16px;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition), opacity var(--transition);
+}
+.grocery-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.grocery-btn--add {
+  background: var(--color-primary);
+  color: #fff;
+}
+.grocery-btn--add:hover:not(:disabled) { background: var(--color-primary-hover); }
+
+.grocery-btn--import {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid transparent;
+}
+.grocery-btn--import:hover:not(:disabled) { background: #d4eddb; }
+
+/* ── Import from meal box ── */
+.grocery-import {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-.grocery-button:hover {
-  background: #1e293b;
+.grocery-import-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
 }
 
+.grocery-import-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.grocery-select {
+  flex: 1;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.grocery-select:focus { border-color: var(--color-primary-mid); }
+
+.grocery-import-warn {
+  font-size: var(--text-xs);
+  color: #b45309;
+}
+
+/* ── Divider ── */
+.grocery-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+/* ── Status ── */
+.grocery-status {
+  text-align: center;
+  padding: var(--space-10) 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+/* ── List ── */
 .grocery-list {
   list-style: none;
-  padding: 0;
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .grocery-item {
-  padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  margin-bottom: 10px;
-  background: #f8fafc;
-  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-4);
+  transition: opacity var(--transition);
+}
+.grocery-item--deleting { opacity: 0.35; }
+
+.grocery-item-name {
+  flex: 1;
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.grocery-item-qty {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.grocery-delete-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+}
+.grocery-delete-btn:hover { color: var(--color-error); background: var(--color-error-bg); }
+.grocery-delete-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Clear all ── */
+.grocery-clear-btn {
+  display: block;
+  margin: var(--space-4) 0 0 auto;
+  background: none;
+  border: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition);
+}
+.grocery-clear-btn:hover { color: var(--color-error); }
+
+@media (max-width: 600px) {
+  .grocery-page { padding: var(--space-5) var(--space-4) var(--space-10); }
+  .grocery-import-row { flex-direction: column; }
 }

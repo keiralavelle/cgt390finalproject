@@ -1,605 +1,357 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, X, Plus, Sparkles, Calendar } from "lucide-react";
 import "./home.css";
 
-const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const MEAL_TYPES = ["Breakfast","Lunch","Dinner","Snack"];
 
-const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
-
-const dayToEnum = {
-  Monday: "MONDAY",
-  Tuesday: "TUESDAY",
-  Wednesday: "WEDNESDAY",
-  Thursday: "THURSDAY",
-  Friday: "FRIDAY",
-  Saturday: "SATURDAY",
-  Sunday: "SUNDAY",
-};
-
-const enumToDay = {
-  MONDAY: "Monday",
-  TUESDAY: "Tuesday",
-  WEDNESDAY: "Wednesday",
-  THURSDAY: "Thursday",
-  FRIDAY: "Friday",
-  SATURDAY: "Saturday",
-  SUNDAY: "Sunday",
-};
-
-const mealTypeToEnum = {
-  Breakfast: "BREAKFAST",
-  Lunch: "LUNCH",
-  Dinner: "DINNER",
-  Snack: "SNACK",
-};
-
-const enumToMealType = {
-  BREAKFAST: "Breakfast",
-  LUNCH: "Lunch",
-  DINNER: "Dinner",
-  SNACK: "Snack",
-};
-
-function cn(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
-
-function Button({
-  children,
-  className = "",
-  variant = "primary",
-  size = "default",
-  type = "button",
-  ...props
-}) {
-  const variantClasses = {
-    primary: "bg-slate-900 text-white hover:bg-slate-800",
-    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
-    outline: "border border-slate-300 bg-white text-slate-900 hover:bg-slate-50",
-    ghost: "bg-transparent text-slate-700 hover:bg-slate-100",
-    destructive: "bg-red-600 text-white hover:bg-red-700",
-  };
-
-  const sizeClasses = {
-    default: "h-10 px-4 py-2",
-    icon: "h-9 w-9 p-0",
-  };
-
-  return (
-    <button
-      type={type}
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50",
-        variantClasses[variant],
-        sizeClasses[size],
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Input({ className = "", ...props }) {
-  return (
-    <input
-      className={cn(
-        "h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-function Select({ className = "", children, ...props }) {
-  return (
-    <select
-      className={cn(
-        "h-11 w-full rounded-2xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-500",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </select>
-  );
-}
-
-const createEmptyWeek = () => {
-  const week = {};
-  for (const day of DAYS) {
-    week[day] = {};
-    for (const mealType of MEAL_TYPES) {
-      week[day][mealType] = null;
-    }
-  }
-  return week;
-};
+const dayToEnum   = { Monday:"MONDAY",Tuesday:"TUESDAY",Wednesday:"WEDNESDAY",Thursday:"THURSDAY",Friday:"FRIDAY",Saturday:"SATURDAY",Sunday:"SUNDAY" };
+const enumToDay   = { MONDAY:"Monday",TUESDAY:"Tuesday",WEDNESDAY:"Wednesday",THURSDAY:"Thursday",FRIDAY:"Friday",SATURDAY:"Saturday",SUNDAY:"Sunday" };
+const mealTypeToEnum = { Breakfast:"BREAKFAST",Lunch:"LUNCH",Dinner:"DINNER",Snack:"SNACK" };
+const enumToMealType = { BREAKFAST:"Breakfast",LUNCH:"Lunch",DINNER:"Dinner",SNACK:"Snack" };
 
 const getMondayOfWeek = (date) => {
   const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
+  const diff = d.getDay() === 0 ? -6 : 1 - d.getDay();
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
 };
-
-const addDays = (date, days) => {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
+const addWeeks  = (date, n) => { const d = new Date(date); d.setDate(d.getDate() + n * 7); return d; };
+const formatKey = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+const formatRange = (ws) => {
+  const end = new Date(ws); end.setDate(end.getDate() + 6);
+  return `${ws.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}`;
 };
 
-const addWeeks = (date, weeks) => addDays(date, weeks * 7);
-
-const formatWeekKey = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const formatDateForInput = (date) => formatWeekKey(date);
-
-const formatWeekRange = (weekStart) => {
-  const weekEnd = addDays(weekStart, 6);
-
-  const startText = weekStart.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-
-  const endText = weekEnd.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  return `${startText} - ${endText}`;
-};
-
-const getWeekLabel = (weekStart) => {
-  const currentWeekStart = getMondayOfWeek(new Date());
-  const selectedKey = formatWeekKey(weekStart);
-  const currentKey = formatWeekKey(currentWeekStart);
-
-  if (selectedKey === currentKey) return "Current Week";
-  return formatWeekRange(weekStart);
-};
-
-function mapCalendarRowsToWeek(calendarRows) {
-  const week = createEmptyWeek();
-
-  for (const row of calendarRows) {
-    const day = enumToDay[row.day];
-    const mealType = enumToMealType[row.slot];
-
-    if (!day || !mealType) continue;
-
-    week[day][mealType] = {
-      id: row.id,
-      mealId: row.mealId,
-      title: row.meal?.title || "Untitled Meal",
-      meal: row.meal || null,
-    };
+function buildWeek(rows) {
+  const week = {};
+  for (const day of DAYS) { week[day] = {}; for (const t of MEAL_TYPES) week[day][t] = null; }
+  for (const row of rows) {
+    const day = enumToDay[row.day]; const t = enumToMealType[row.slot];
+    if (day && t) week[day][t] = { id: row.id, mealId: row.mealId, title: row.meal?.title || "Untitled", ingredients: row.meal?.ingredients || [] };
   }
-
   return week;
 }
 
-async function parseJsonSafely(res) {
-  try {
-    return await res.json();
-  } catch {
-    return null;
-  }
+// ── Macro bar component ──────────────────────────────────────────
+function MacroBar({ label, value, max, color }) {
+  const pct = Math.min(100, Math.round((value / max) * 100));
+  return (
+    <div className="macro-bar-row">
+      <span className="macro-bar-label">{label}</span>
+      <div className="macro-bar-track">
+        <div className="macro-bar-fill" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <span className="macro-bar-value">{value}g</span>
+    </div>
+  );
 }
 
-export default function Home() {
-  const [currentWeekStart, setCurrentWeekStart] = useState(
-    getMondayOfWeek(new Date())
-  );
-  const [calendarRows, setCalendarRows] = useState([]);
-  const [meals, setMeals] = useState([]);
+// ── Macro panel ──────────────────────────────────────────────────
+function MacroPanel({ week, meals }) {
+  const [macros, setMacros]     = useState(null); // { days: {...}, week: {...} }
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [view, setView]         = useState("week"); // "week" | day name
 
-  const [selectedDay, setSelectedDay] = useState("Monday");
-  const [selectedMealType, setSelectedMealType] = useState("Breakfast");
-  const [selectedMealId, setSelectedMealId] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const [loadingCalendar, setLoadingCalendar] = useState(true);
-  const [loadingMeals, setLoadingMeals] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const currentWeekKey = useMemo(
-    () => formatWeekKey(currentWeekStart),
-    [currentWeekStart]
-  );
-
-  const weekMeals = useMemo(() => {
-    return mapCalendarRowsToWeek(calendarRows);
-  }, [calendarRows]);
-
-  const completedCount = useMemo(() => {
-    let count = 0;
+  const plannedMeals = useMemo(() => {
+    const result = [];
     for (const day of DAYS) {
-      for (const mealType of MEAL_TYPES) {
-        if (weekMeals[day]?.[mealType]) count += 1;
+      for (const type of MEAL_TYPES) {
+        const entry = week[day]?.[type];
+        if (entry) result.push({ day, type, title: entry.title, ingredients: entry.ingredients });
       }
     }
-    return count;
-  }, [weekMeals]);
+    return result;
+  }, [week]);
+
+  async function estimate() {
+    if (!plannedMeals.length) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/macros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meals: plannedMeals }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed");
+      setMacros(data);
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  }
+
+  const displayMacros = useMemo(() => {
+    if (!macros) return null;
+    if (view === "week") return macros.week;
+    return macros.days?.[view] || null;
+  }, [macros, view]);
+
+  return (
+    <div className="macro-panel">
+      <div className="macro-panel-header">
+        <div className="macro-panel-title">
+          <Sparkles size={15} />
+          AI Macro Estimate
+        </div>
+        <button
+          className="macro-estimate-btn"
+          onClick={estimate}
+          disabled={loading || !plannedMeals.length}
+        >
+          {loading ? "Estimating…" : macros ? "Re-estimate" : "Estimate"}
+        </button>
+      </div>
+
+      {!plannedMeals.length && (
+        <p className="macro-empty">Plan some meals to get an estimate.</p>
+      )}
+
+      {error && <p className="macro-error">⚠ {error}</p>}
+
+      {macros && (
+        <>
+          {/* Day tabs */}
+          <div className="macro-tabs">
+            <button className={`macro-tab ${view === "week" ? "macro-tab--active" : ""}`} onClick={() => setView("week")}>Week</button>
+            {DAYS.map(d => (
+              <button
+                key={d}
+                className={`macro-tab ${view === d ? "macro-tab--active" : ""}`}
+                onClick={() => setView(d)}
+              >
+                {d.slice(0,3)}
+              </button>
+            ))}
+          </div>
+
+          {displayMacros ? (
+            <div className="macro-data">
+              <div className="macro-kcal">
+                <span className="macro-kcal-num">{displayMacros.calories}</span>
+                <span className="macro-kcal-label">kcal {view === "week" ? "/ week" : "/ day"}</span>
+              </div>
+              <div className="macro-bars">
+                <MacroBar label="Protein"  value={displayMacros.protein}  max={view === "week" ? 1000 : 150} color="#4a7c59" />
+                <MacroBar label="Carbs"    value={displayMacros.carbs}    max={view === "week" ? 2200 : 325} color="#e6a817" />
+                <MacroBar label="Fat"      value={displayMacros.fat}      max={view === "week" ? 1200 : 178} color="#c84b2f" />
+                <MacroBar label="Fiber"    value={displayMacros.fiber}    max={view === "week" ? 210  : 30}  color="#7a9e87" />
+              </div>
+              {displayMacros.note && (
+                <p className="macro-note">{displayMacros.note}</p>
+              )}
+            </div>
+          ) : (
+            <p className="macro-empty">No meals planned for {view}.</p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────
+export default function Home() {
+  const [weekStart, setWeekStart] = useState(getMondayOfWeek(new Date()));
+  const [calRows, setCalRows]     = useState([]);
+  const [meals, setMeals]         = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState("");
+
+  const [modal, setModal]           = useState(null);
+  const [selectedMealId, setSelectedMealId] = useState("");
+
+  const dateInputRef = useRef(null);
+
+  const weekKey = useMemo(() => formatKey(weekStart), [weekStart]);
+  const week    = useMemo(() => buildWeek(calRows), [calRows]);
+  const planned = useMemo(() => DAYS.reduce((a, d) => a + MEAL_TYPES.filter(t => week[d]?.[t]).length, 0), [week]);
+
+  async function loadCalendar(ws) {
+    setLoading(true); setError("");
+    try {
+      const res  = await fetch(`/api/calendar?weekStart=${formatKey(ws)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to load");
+      setCalRows(Array.isArray(data) ? data : []);
+    } catch (e) { setError(e.message); setCalRows([]); }
+    finally { setLoading(false); }
+  }
 
   async function loadMeals() {
     try {
-      setLoadingMeals(true);
-      setError("");
-
-      const res = await fetch("/api/meals", {
-        cache: "no-store",
-      });
-
-      const data = await parseJsonSafely(res);
-
-      if (!res.ok) {
-        throw new Error(data?.error || `Failed to load meals (${res.status})`);
-      }
-
+      const res  = await fetch("/api/meals");
+      const data = await res.json();
       setMeals(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to load meals");
-      setMeals([]);
-    } finally {
-      setLoadingMeals(false);
-    }
+    } catch { setMeals([]); }
   }
 
-  async function loadCalendar(weekStartDate) {
-    try {
-      setLoadingCalendar(true);
-      setError("");
+  useEffect(() => { loadMeals(); }, []);
+  useEffect(() => { loadCalendar(weekStart); }, [weekStart]);
 
-      const weekStart = formatWeekKey(weekStartDate);
-      const res = await fetch(
-        `/api/calendar?weekStart=${encodeURIComponent(weekStart)}`,
-        {
-          method: "GET",
-          cache: "no-store",
-        }
-      );
-
-      const data = await parseJsonSafely(res);
-
-      if (!res.ok) {
-        throw new Error(
-          data?.error || `Failed to load calendar (${res.status})`
-        );
-      }
-
-      setCalendarRows(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to load calendar");
-      setCalendarRows([]);
-    } finally {
-      setLoadingCalendar(false);
-    }
+  function openModal(day, mealType) {
+    setModal({ day, mealType });
+    setSelectedMealId(week[day]?.[mealType]?.mealId || "");
+    setError("");
   }
 
-  useEffect(() => {
-    loadMeals();
-  }, []);
-
-  useEffect(() => {
-    loadCalendar(currentWeekStart);
-  }, [currentWeekStart]);
-
-  const openAddMealDialog = (day, mealType) => {
-    setSelectedDay(day);
-    setSelectedMealType(mealType);
-
-    const existing = weekMeals[day]?.[mealType];
-    setSelectedMealId(existing?.mealId || "");
-    setOpen(true);
-  };
-
-  const saveMeal = async () => {
-    if (!selectedMealId) {
-      setError("Please select a meal.");
-      return;
-    }
-
+  async function saveMeal() {
+    if (!selectedMealId) return;
+    setSaving(true); setError("");
     try {
-      setSaving(true);
-      setError("");
-
-      const res = await fetch("/api/calendar", {
+      const res  = await fetch("/api/calendar", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mealId: selectedMealId,
-          weekStart: currentWeekKey,
-          day: dayToEnum[selectedDay],
-          slot: mealTypeToEnum[selectedMealType],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mealId: selectedMealId, weekStart: weekKey, day: dayToEnum[modal.day], slot: mealTypeToEnum[modal.mealType] }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to save");
+      await loadCalendar(weekStart);
+      setModal(null);
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
+  }
 
-      const data = await parseJsonSafely(res);
-
-      if (!res.ok) {
-        throw new Error(
-          data?.error || `Failed to save meal to calendar (${res.status})`
-        );
-      }
-
-      await loadCalendar(currentWeekStart);
-      setOpen(false);
-      setSelectedMealId("");
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to save meal");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const clearMeal = async (day, mealType) => {
-    const existing = weekMeals[day]?.[mealType];
-    if (!existing) return;
-
+  async function clearSlot(day, mealType) {
+    setSaving(true); setError("");
     try {
-      setSaving(true);
-      setError("");
-
       const res = await fetch("/api/calendar/remove", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          weekStart: currentWeekKey,
-          day: dayToEnum[day],
-          slot: mealTypeToEnum[mealType],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weekStart: weekKey, day: dayToEnum[day], slot: mealTypeToEnum[mealType] }),
       });
+      if (!res.ok) { const d = await res.json(); throw new Error(d?.error || "Failed"); }
+      await loadCalendar(weekStart);
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
+  }
 
-      const data = await parseJsonSafely(res);
-
-      if (!res.ok) {
-        throw new Error(
-          data?.error || `Failed to remove meal (${res.status})`
-        );
-      }
-
-      await loadCalendar(currentWeekStart);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to remove meal");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const goToPreviousWeek = () => {
-    setCurrentWeekStart((prev) => addWeeks(prev, -1));
-  };
-
-  const goToNextWeek = () => {
-    setCurrentWeekStart((prev) => addWeeks(prev, 1));
-  };
-
-  const goToCurrentWeek = () => {
-    setCurrentWeekStart(getMondayOfWeek(new Date()));
-  };
-
-  const handleWeekPickerChange = (event) => {
-    const pickedDate = new Date(`${event.target.value}T12:00:00`);
-    if (!Number.isNaN(pickedDate.getTime())) {
-      setCurrentWeekStart(getMondayOfWeek(pickedDate));
-    }
-  };
+  function handleDatePick(e) {
+    const picked = new Date(`${e.target.value}T12:00:00`);
+    if (!isNaN(picked)) setWeekStart(getMondayOfWeek(picked));
+  }
 
   return (
-    <div className="weekly-meal-page">
-      <div className="weekly-meal-container">
-        <div className="weekly-meal-topbar">
-          <div className="weekly-meal-heading">
-            <h1>Weekly Meal Calendar</h1>
-            <p>
-              Plan breakfast, lunch, dinner, and snacks for any week. Meals are
-              loaded from your backend.
-            </p>
+    <div className="cal-page">
+      {/* ── Header ── */}
+      <div className="cal-header">
+        <h1 className="cal-title">Meal Calendar</h1>
+
+        <div className="cal-nav">
+          <button className="cal-nav-btn" onClick={() => setWeekStart(w => addWeeks(w, -1))}>
+            <ChevronLeft size={16} />
+          </button>
+
+          <div className="cal-week-label">
+            <span className="cal-week-range">{formatRange(weekStart)}</span>
+            <button className="cal-today-btn" onClick={() => setWeekStart(getMondayOfWeek(new Date()))}>Today</button>
           </div>
 
-          <div className="weekly-meal-controls">
-            <div className="control-card week-switcher">
-              <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
+          <button className="cal-nav-btn" onClick={() => setWeekStart(w => addWeeks(w, 1))}>
+            <ChevronRight size={16} />
+          </button>
 
-              <div className="week-switcher-center">
-                <div className="week-switcher-label">
-                  {getWeekLabel(currentWeekStart)}
-                </div>
-                <div className="week-switcher-range">
-                  {formatWeekRange(currentWeekStart)}
-                </div>
-              </div>
-
-              <Button variant="outline" size="icon" onClick={goToNextWeek}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="control-card date-picker-row">
-              <label>Pick a date</label>
-              <Input
-                type="date"
-                value={formatDateForInput(currentWeekStart)}
-                onChange={handleWeekPickerChange}
-              />
-              <Button variant="secondary" onClick={goToCurrentWeek}>
-                Current Week
-              </Button>
-            </div>
-
-            <div className="control-card meal-count">
-              <strong>Meals planned:</strong> {completedCount} / 28
-            </div>
+          {/* Hidden native date input, triggered by calendar icon button */}
+          <div className="cal-datepicker-wrap">
+            <button className="cal-nav-btn" onClick={() => dateInputRef.current?.showPicker()} title="Pick a date">
+              <Calendar size={15} />
+            </button>
+            <input
+              ref={dateInputRef}
+              type="date"
+              className="cal-date-input-hidden"
+              value={formatKey(weekStart)}
+              onChange={handleDatePick}
+              tabIndex={-1}
+            />
           </div>
         </div>
 
-        {error ? (
-          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        ) : null}
+        <span className="cal-count">{planned} / 28 planned</span>
+      </div>
 
-        {loadingCalendar || loadingMeals ? (
-          <div className="rounded-3xl bg-white p-8 shadow-md text-sm text-slate-600">
-            Loading your meal planner...
-          </div>
+      {error && <div className="cal-error">{error}</div>}
+
+      <div className="cal-body">
+        {/* ── Grid ── */}
+        {loading ? (
+          <div className="cal-loading">Loading…</div>
         ) : (
-          <div className="week-grid">
-            {DAYS.map((day) => (
-              <div key={`${currentWeekKey}-${day}`} className="day-column">
-                <div className="day-column-header">
-                  <h2>{day}</h2>
-                </div>
-
-                <div className="day-column-content">
-                  {MEAL_TYPES.map((mealType) => {
-                    const entry = weekMeals[day]?.[mealType];
-                    const value = entry?.title || "";
-
-                    return (
-                      <div key={`${day}-${mealType}`} className="meal-card">
-                        <div className="meal-card-top">
-                          <h3>{mealType}</h3>
-
-                          <div className="meal-card-actions">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => openAddMealDialog(day, mealType)}
-                              disabled={saving}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-
-                            {value ? (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => clearMeal(day, mealType)}
-                                disabled={saving}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            ) : null}
-                          </div>
+          <div className="cal-grid">
+            {DAYS.map(day => (
+              <div key={day} className="cal-day">
+                <div className="cal-day-name">{day.slice(0,3)}</div>
+                {MEAL_TYPES.map(type => {
+                  const entry = week[day]?.[type];
+                  return (
+                    <div key={type} className={`cal-slot ${entry ? "cal-slot--filled" : ""}`}>
+                      <span className="cal-slot-type">{type}</span>
+                      {entry ? (
+                        <div className="cal-slot-meal">
+                          <button className="cal-slot-name" onClick={() => openModal(day, type)} disabled={saving}>
+                            {entry.title}
+                          </button>
+                          <button className="cal-slot-clear" onClick={() => clearSlot(day, type)} disabled={saving} aria-label="Remove">
+                            <X size={12} />
+                          </button>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => openAddMealDialog(day, mealType)}
-                          className="meal-entry-button"
-                          disabled={saving}
-                        >
-                          {value ? (
-                            <span className="meal-entry-filled">{value}</span>
-                          ) : (
-                            <span className="meal-entry-empty">
-                              Select a meal
-                            </span>
-                          )}
+                      ) : (
+                        <button className="cal-slot-add" onClick={() => openModal(day, type)} disabled={saving}>
+                          <Plus size={12} /> Add
                         </button>
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
         )}
 
-        {open ? (
-          <div className="modal-overlay">
-            <div className="modal-card">
-              <div className="modal-header">
-                <div>
-                  <h3>
-                    {selectedDay} - {selectedMealType}
-                  </h3>
-                  <p>Select a saved meal for this slot.</p>
-                </div>
+        {/* ── Macro panel ── */}
+        {!loading && <MacroPanel week={week} meals={meals} />}
+      </div>
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+      {/* ── Meal picker modal ── */}
+      {modal && (
+        <div className="cal-modal-overlay" onClick={() => setModal(null)}>
+          <div className="cal-modal" onClick={e => e.stopPropagation()}>
+            <div className="cal-modal-header">
+              <h2>{modal.day} — {modal.mealType}</h2>
+              <button className="cal-modal-close" onClick={() => setModal(null)}><X size={16} /></button>
+            </div>
 
-              <div className="modal-body">
-                <div className="modal-field">
-                  <label>Choose meal</label>
-                  <Select
-                    value={selectedMealId}
-                    onChange={(e) => setSelectedMealId(e.target.value)}
+            {meals.length === 0 ? (
+              <p className="cal-modal-empty">No meals yet. Add some meals first.</p>
+            ) : (
+              <div className="cal-modal-list">
+                {meals.map(meal => (
+                  <button
+                    key={meal.id}
+                    className={`cal-meal-option ${selectedMealId === meal.id ? "cal-meal-option--selected" : ""}`}
+                    onClick={() => setSelectedMealId(meal.id)}
                   >
-                    <option value="">Select a meal</option>
-                    {meals.map((meal) => (
-                      <option key={meal.id} value={meal.id}>
-                        {meal.title}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                {meals.length === 0 ? (
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                    No meals found yet. Create a meal first so you can assign it
-                    to the calendar.
-                  </div>
-                ) : null}
-
-                <div className="modal-actions">
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpen(false)}
-                    disabled={saving}
-                  >
-                    Cancel 
-                  </Button>
-                  <Button onClick={saveMeal} disabled={saving || !selectedMealId}>
-                    {saving ? "Saving..." : "Save Meal"}
-                  </Button>
-                </div>
+                    {meal.title}
+                  </button>
+                ))}
               </div>
+            )}
+
+            {error && <p className="cal-modal-error">{error}</p>}
+
+            <div className="cal-modal-actions">
+              <button className="cal-btn cal-btn--ghost" onClick={() => setModal(null)}>Cancel</button>
+              <button className="cal-btn cal-btn--primary" onClick={saveMeal} disabled={saving || !selectedMealId}>
+                {saving ? "Saving…" : "Save"}
+              </button>
             </div>
           </div>
-        ) : null}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
