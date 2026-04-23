@@ -2,7 +2,7 @@
 
 .page {
   padding: var(--space-8) var(--space-6) var(--space-12);
-  max-width: 760px;
+  min-width: 760px;
   margin: 0 auto;
 }
 
@@ -17,6 +17,8 @@
   color: var(--color-text);
   letter-spacing: -0.02em;
 }
+
+
 
 .subtitle {
   font-size: var(--text-sm);

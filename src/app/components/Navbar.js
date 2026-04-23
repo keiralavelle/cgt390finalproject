@@ -12,18 +12,17 @@ const Navbar = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { name: "Home", path: "/" },
+    { name: "Home",         path: "/" },
     { name: "Grocery List", path: "/grocery" },
-    { name: "Favorites", path: "/favorites" },
-    { name: "Search", path: "/search" },
-    { name: "Add Meal", path: "/add-meal" },
-    { name: "Account", path: "/account" },
+    { name: "Favorites",    path: "/favorites" },
+    { name: "Search",       path: "/search" },
+    { name: "Add Meal",     path: "/add-meal" },
   ];
 
   return (
     <nav className="navbar">
       <div className="navbar-left">
-        <Image src={logo} alt="Logo" width={60} height={60} />
+        <Image src={logo} alt="Logo" width={50} height={50} />
         <div className="navbar-logo">PantryPal</div>
       </div>
 
@@ -32,11 +31,7 @@ const Navbar = () => {
           <li key={item.name}>
             <Link
               href={item.path}
-              className={
-                pathname === item.path
-                  ? "nav-link active"
-                  : "nav-link"
-              }
+              className={pathname === item.path ? "nav-link active" : "nav-link"}
             >
               {item.name}
             </Link>
@@ -46,10 +41,13 @@ const Navbar = () => {
 
       <div className="auth-section">
         {status === "loading" ? (
-          <span>Loading...</span>
+          <span className="auth-loading">Loading…</span>
         ) : session ? (
           <>
-            <span className="user-email">{session.user.email}</span>
+            {/* Clicking the email goes to the account page */}
+            <Link href="/account" className="user-email" title="Edit account">
+              {session.user.email}
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className="sign-out-btn"
