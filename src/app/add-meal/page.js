@@ -144,7 +144,7 @@ export default function AddMeal() {
             <button
               id="add-meal-submit"
               type="submit"
-              className="add-meal-button add-meal-button-primary"
+              className="add-meal-btn add-meal-btn--primary"
             >
               Add Meal
             </button>

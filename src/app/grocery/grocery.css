@@ -2,7 +2,7 @@
 
 .grocery-page {
   padding: var(--space-8) var(--space-6) var(--space-12);
-  max-width: 600px;
+  min-width: 760px;
   margin: 0 auto;
 }
 
@@ -43,11 +43,15 @@
   outline: none;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
+
 .grocery-input:focus {
   border-color: var(--color-primary-mid);
-  box-shadow: 0 0 0 3px rgba(74,124,89,0.15);
+  box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
 }
-.grocery-input::placeholder { color: var(--color-text-muted); }
+
+.grocery-input::placeholder {
+  color: var(--color-text-muted);
+}
 
 .grocery-btn {
   padding: 10px var(--space-4);
@@ -59,20 +63,30 @@
   white-space: nowrap;
   transition: background var(--transition), opacity var(--transition);
 }
-.grocery-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.grocery-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
 .grocery-btn--add {
   background: var(--color-primary);
   color: #fff;
 }
-.grocery-btn--add:hover:not(:disabled) { background: var(--color-primary-hover); }
+
+.grocery-btn--add:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
 
 .grocery-btn--import {
   background: var(--color-primary-light);
   color: var(--color-primary);
   border: 1px solid transparent;
 }
-.grocery-btn--import:hover:not(:disabled) { background: #d4eddb; }
+
+.grocery-btn--import:hover:not(:disabled) {
+  background: #d4eddb;
+}
 
 /* ── Import from meal box ── */
 .grocery-import {
@@ -110,7 +124,10 @@
   outline: none;
   transition: border-color var(--transition);
 }
-.grocery-select:focus { border-color: var(--color-primary-mid); }
+
+.grocery-select:focus {
+  border-color: var(--color-primary-mid);
+}
 
 .grocery-import-warn {
   font-size: var(--text-xs);
@@ -151,7 +168,10 @@
   padding: 10px var(--space-4);
   transition: opacity var(--transition);
 }
-.grocery-item--deleting { opacity: 0.35; }
+
+.grocery-item--deleting {
+  opacity: 0.35;
+}
 
 .grocery-item-name {
   flex: 1;
@@ -179,8 +199,16 @@
   justify-content: center;
   transition: color var(--transition), background var(--transition);
 }
-.grocery-delete-btn:hover { color: var(--color-error); background: var(--color-error-bg); }
-.grocery-delete-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.grocery-delete-btn:hover {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+.grocery-delete-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 /* ── Clear all ── */
 .grocery-clear-btn {
@@ -195,9 +223,17 @@
   text-underline-offset: 2px;
   transition: color var(--transition);
 }
-.grocery-clear-btn:hover { color: var(--color-error); }
+
+.grocery-clear-btn:hover {
+  color: var(--color-error);
+}
 
 @media (max-width: 600px) {
-  .grocery-page { padding: var(--space-5) var(--space-4) var(--space-10); }
-  .grocery-import-row { flex-direction: column; }
+  .grocery-page {
+    padding: var(--space-5) var(--space-4) var(--space-10);
+  }
+
+  .grocery-import-row {
+    flex-direction: column;
+  }
 }
