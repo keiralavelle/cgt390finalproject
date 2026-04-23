@@ -6,16 +6,20 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import logo from "../../assets/fork.png";
+import home from "../../assets/home.png";
+import search from "../../assets/search.png";
+import meal from "../../assets/add-meal.png";
+import grocery from "../../assets/grocery.png";
 
 const Navbar = () => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
 
   const navItems = [
-    { name: "Home",         path: "/" },
-    { name: "Grocery List", path: "/grocery" },
-    { name: "Search",       path: "/search" },
-    { name: "Add Meal",     path: "/add-meal" },
+    { name: "Home",         path: "/", icon: home, width: 22, height: 22 },
+    { name: "Grocery List", path: "/grocery", icon: grocery, width: 40, height: 40 },
+    { name: "Search",       path: "/search", icon: search, width: 35, height: 30 },
+    { name: "Add Meal",     path: "/add-meal", icon: meal, width: 40, height: 40 },
   ];
 
   return (
@@ -32,7 +36,16 @@ const Navbar = () => {
               href={item.path}
               className={pathname === item.path ? "nav-link active" : "nav-link"}
             >
-              {item.name}
+              <div className="icon-wrapper">
+                <Image
+                  src={item.icon}
+                  alt={item.name}
+                  width={item.width}
+                  height={item.height}
+                />
+              </div>    
+
+              <span className="nav-tooltip">{item.name}</span>
             </Link>
           </li>
         ))}

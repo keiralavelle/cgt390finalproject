@@ -278,6 +278,14 @@
 }
 .cal-slot-name--skip:hover { color: var(--color-text-secondary); }
 
+/* "No meal" label in a skipped slot */
+.cal-slot-name--skip {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+.cal-slot-name--skip:hover { color: var(--color-text-secondary); }
+
 .cal-slot-clear {
   flex-shrink: 0;
   width: 16px;
