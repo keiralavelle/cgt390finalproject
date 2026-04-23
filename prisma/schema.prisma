@@ -60,6 +60,7 @@ model Meal {
 
   @@index([userId])
   @@index([userId, isFavorite])
+  @@unique([userId, title]) 
 }
 
 model GroceryItem {

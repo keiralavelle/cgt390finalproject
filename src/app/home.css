@@ -84,6 +84,52 @@
   color: var(--color-text-muted);
 }
 
+/* ── Plate progress widget ── */
+.cal-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.cal-progress-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cal-progress-num {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.cal-progress-denom {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.cal-progress-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Plate SVG: viewBox is 80×56, wider than tall to fit fork/knife outside plate rim */
+.plate-svg {
+  flex-shrink: 0;
+  display: block;
+  width: 80px;
+  height: 56px;
+}
+
 .cal-error {
   background: var(--color-error-bg);
   border: 1px solid var(--color-error-border);
@@ -148,6 +194,11 @@
 .cal-slot:last-child { border-bottom: none; }
 .cal-slot--filled { background: var(--color-primary-light); }
 
+/* Intentionally skipped slot — counts as planned, shown differently */
+.cal-slot--skipped {
+  background: #f5f5f4;
+}
+
 .cal-slot-type {
   font-size: var(--text-xs);
   font-weight: 600;
@@ -177,6 +228,14 @@
   transition: color var(--transition);
 }
 .cal-slot-name:hover { color: var(--color-primary); }
+
+/* "No meal" label in a skipped slot */
+.cal-slot-name--skip {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+.cal-slot-name--skip:hover { color: var(--color-text-secondary); }
 
 .cal-slot-clear {
   flex-shrink: 0;
@@ -337,6 +396,39 @@
 .cal-meal-option:hover { background: var(--color-primary-light); border-color: var(--color-primary-mid); }
 .cal-meal-option--selected { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary); font-weight: 600; }
 
+/* "No meal" option — always at top of modal list */
+.cal-meal-option--none {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  border-style: dashed;
+  font-size: var(--text-sm);
+}
+.cal-meal-option--none:hover {
+  background: var(--color-error-bg);
+  border-color: var(--color-error-border);
+  border-style: solid;
+  color: var(--color-error);
+}
+.cal-meal-option--none-selected {
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  font-weight: 600;
+}
+.cal-meal-option--none-selected:hover {
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.cal-no-meal-icon {
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
 .cal-modal-error { font-size: var(--text-sm); color: var(--color-error); margin: 0; }
 .cal-modal-actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
 
@@ -364,9 +456,11 @@
 @media (max-width: 800px) {
   .cal-grid { grid-template-columns: repeat(2, 1fr); }
   .cal-header { gap: var(--space-3); }
+  .cal-progress { margin-left: 0; }
 }
 @media (max-width: 600px) {
   .cal-page { padding: var(--space-5) var(--space-4) var(--space-10); }
   .cal-grid { grid-template-columns: 1fr; }
   .cal-count { margin-left: 0; width: 100%; }
+  .cal-progress { width: 100%; }
 }

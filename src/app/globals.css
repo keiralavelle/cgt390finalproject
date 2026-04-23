@@ -10,8 +10,8 @@
 /* ── Design tokens ───────────────────────────────────── */
 :root {
   /* Brand */
-  --color-primary:       #2d5a3d;   /* forest green — buttons, accents */
-  --color-primary-hover: #1e3d29;
+  --color-primary:       #2d405a;   /* forest green — buttons, accents */
+  --color-primary-hover: #1e323d;
   --color-primary-light: #e8f5ed;
   --color-primary-mid:   #4a7c59;
 
@@ -22,8 +22,8 @@
   --color-border-strong: #c8cfc4;
 
   /* Text */
-  --color-text:          #1a1f18;
-  --color-text-secondary:#5a6357;
+  --color-text:          #181c1f;
+  --color-text-secondary:#575c63;
   --color-text-muted:    #9aa398;
 
   /* Feedback */

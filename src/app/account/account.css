@@ -2,8 +2,17 @@
 
 .account-page {
   padding: var(--space-8) var(--space-6) var(--space-12);
-  max-width: 640px;
+  min-width: 760px;
   margin: 0 auto;
+}
+
+/* ── Header row ── */
+.account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  gap: var(--space-4);
 }
 
 .account-title {
@@ -11,9 +20,47 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.02em;
-  margin-bottom: var(--space-6);
+  margin: 0;
 }
 
+/* Edit / Cancel buttons in the header */
+.account-edit-btn,
+.account-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 7px var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.account-edit-btn {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.account-edit-btn:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary-mid);
+}
+
+.account-cancel-btn {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.account-cancel-btn:hover {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+}
+
+/* ── Card ── */
 .account-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -22,61 +69,93 @@
   padding: var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
-/* Section group (e.g. "Food Preferences") */
+/* ── Section label ── */
 .account-section-label {
   font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   color: var(--color-text-muted);
   padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-1);
+}
+
+/* First section label — no top border/padding */
+.account-section-label:first-of-type {
+  padding-top: 0;
+  border-top: none;
+  margin-top: 0;
+}
+
+/* ── Field ── */
+.account-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.account-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── View mode value ── */
+.account-value {
+  font-size: var(--text-base);
+  color: var(--color-text);
+  padding: 2px 0;
+  line-height: 1.5;
+  min-height: 1.6em;
+}
+
+.account-value--empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ── Edit mode input ── */
+.account-input {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 9px var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.account-input:focus {
+  background: var(--color-surface);
+  border-color: var(--color-primary-mid);
+  box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
+}
+
+.account-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ── Actions row ── */
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
   margin-top: var(--space-2);
 }
 
-.account-form {
-  display: contents; /* fields live directly in .account-card gap */
-}
-
-.account-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.account-label {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-.account-input {
-  width: 100%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 10px var(--space-3);
-  font-size: var(--text-base);
-  color: var(--color-text);
-  outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-.account-input:focus {
-  border-color: var(--color-primary-mid);
-  box-shadow: 0 0 0 3px rgba(74,124,89,0.15);
-}
-.account-input::placeholder { color: var(--color-text-muted); }
-
-.account-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: var(--space-2);
-}
-
 .account-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: 10px var(--space-6);
   background: var(--color-primary);
   color: #fff;
@@ -85,11 +164,18 @@
   font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: background var(--transition), transform var(--transition);
 }
-.account-save-btn:hover { background: var(--color-primary-hover); }
-.account-save-btn:active { transform: scale(0.98); }
 
+.account-save-btn:hover {
+  background: var(--color-primary-hover);
+}
+
+.account-save-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Success banner ── */
 .account-success {
   background: var(--color-success-bg);
   border: 1px solid var(--color-success-border);
@@ -97,9 +183,42 @@
   border-radius: var(--radius-md);
   padding: 10px var(--space-4);
   font-size: var(--text-sm);
+  font-weight: 500;
+  margin-bottom: var(--space-4);
 }
 
+/* ── Navbar email link style (add to Navbar.css) ── */
+.user-email {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+  transition: color var(--transition), text-decoration-color var(--transition);
+  cursor: pointer;
+}
+
+.user-email:hover {
+  color: #fff;
+  text-decoration-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Responsive ── */
 @media (max-width: 600px) {
-  .account-page { padding: var(--space-5) var(--space-4) var(--space-10); }
-  .account-card { padding: var(--space-5); }
+  .account-page {
+    padding: var(--space-5) var(--space-4) var(--space-10);
+  }
+
+  .account-card {
+    padding: var(--space-5);
+  }
+
+  .account-save-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
