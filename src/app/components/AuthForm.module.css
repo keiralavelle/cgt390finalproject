@@ -1,119 +1,130 @@
+/* AuthForm.module.css */
 
-.authForm {
+.authWrap {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--navbar-h));
+  padding: var(--space-6);
+}
+
+.authWrap h1 {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--space-6);
+  letter-spacing: -0.02em;
+}
+
+.authForm {
+  width: 100%;
   max-width: 400px;
-  margin: 32px auto;
-  padding: 24px;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .authForm div {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .authForm label {
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: #333333;
-  font-size: 14px;
-  letter-spacing: 0.3px;
+  color: var(--color-text-secondary);
 }
 
 .authForm input {
-  padding: 10px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.authForm input:focus {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-text);
   outline: none;
-  border-color: #0066cc;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
+.authForm input:focus {
+  border-color: var(--color-primary-mid);
+  box-shadow: 0 0 0 3px rgba(74,124,89,0.15);
+}
+.authForm input::placeholder { color: var(--color-text-muted); }
 
 .authForm button[type="submit"] {
-  padding: 10px 16px;
-  margin-top: 8px;
-  background-color: #0066cc;
-  color: #ffffff;
+  margin-top: var(--space-2);
+  padding: 11px var(--space-5);
+  background: var(--color-primary);
+  color: #fff;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background var(--transition);
 }
-
 .authForm button[type="submit"]:hover:not(:disabled) {
-  background-color: #0052a3;
+  background: var(--color-primary-hover);
 }
-
 .authForm button[type="submit"]:disabled {
-  background-color: #b3d9ff;
+  opacity: 0.45;
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .error {
-  padding: 12px;
-  background-color: #fee;
-  color: #c23030;
-  border: 1px solid #fcc;
-  border-radius: 6px;
-  font-size: 14px;
-  margin-top: 8px;
+  padding: 10px var(--space-3);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-sm);
 }
 
 .statusMessage {
-  padding: 12px;
-  background-color: #e6f2ff;
-  color: #0052a3;
-  border: 1px solid #b3d9ff;
-  border-radius: 6px;
-  font-size: 14px;
-  margin-bottom: 16px;
+  padding: 10px var(--space-3);
+  background: var(--color-primary-light);
+  border: 1px solid #b2d4bc;
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
   text-align: center;
 }
 
 .toggle {
   text-align: center;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .toggle p {
-  margin: 0 0 8px;
-  color: #666666;
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
 }
 
 .toggle button {
-  padding: 8px 16px;
-  background-color: #f5f5f5;
-  color: #0066cc;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 8px var(--space-4);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: background var(--transition), border-color var(--transition);
 }
-
 .toggle button:hover {
-  background-color: #e8e8e8;
-  border-color: #0066cc;
-}
-
-.toggle button:active {
-  transform: translateY(1px);
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-mid);
 }

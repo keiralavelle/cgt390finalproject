@@ -26,7 +26,7 @@ export default function Account() {
   };
 
   return (
-    <div className="page">
+    <div className="account-page">
       <h1>Personal Information</h1>
 
       <form onSubmit={handleSubmit}>
