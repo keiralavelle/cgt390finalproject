@@ -31,6 +31,21 @@ const formatRange = (ws) => {
   return `${ws.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}`;
 };
 
+// Returns a Date for each of the 7 days starting at weekStart
+function getWeekDates(weekStart) {
+  return DAYS.map((_, i) => {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+function isSameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
 // Each slot entry gets an isSkipped flag so the UI knows to render "No meal"
 function buildWeek(rows) {
   const week = {};
@@ -208,8 +223,10 @@ export default function Home() {
   const [selectedMealId, setSelectedMealId] = useState("");
   const dateInputRef = useRef(null);
 
-  const weekKey = useMemo(() => formatKey(weekStart), [weekStart]);
-  const week    = useMemo(() => buildWeek(calRows), [calRows]);
+  const weekKey   = useMemo(() => formatKey(weekStart), [weekStart]);
+  const week      = useMemo(() => buildWeek(calRows), [calRows]);
+  const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
+  const today     = useMemo(() => new Date(), []);
 
   // Count both real meals and intentionally-skipped slots
   const planned = useMemo(() =>
@@ -330,9 +347,19 @@ export default function Home() {
           <div className="cal-loading">Loading…</div>
         ) : (
           <div className="cal-grid">
-            {DAYS.map(day => (
-              <div key={day} className="cal-day">
-                <div className="cal-day-name">{day.slice(0,3)}</div>
+            {DAYS.map((day, dayIdx) => {
+              const dayDate  = weekDates[dayIdx];
+              const isToday  = isSameDay(dayDate, today);
+              const dateNum  = dayDate.getDate();
+              const monthStr = dayDate.toLocaleDateString(undefined, { month: "short" });
+              return (
+              <div key={day} className={`cal-day ${isToday ? "cal-day--today" : ""}`}>
+                <div className="cal-day-name">
+                  <span className="cal-day-abbr">{day.slice(0,3)}</span>
+                  <span className={`cal-day-date ${isToday ? "cal-day-date--today" : ""}`}>
+                    {monthStr} {dateNum}
+                  </span>
+                </div>
                 {MEAL_TYPES.map(type => {
                   const entry = week[day]?.[type];
                   return (
@@ -360,7 +387,7 @@ export default function Home() {
                   );
                 })}
               </div>
-            ))}
+            ); })}
           </div>
         )}
         {!loading && <MacroPanel week={week}/>}

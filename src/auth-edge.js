@@ -1,4 +1,3 @@
-
 import NextAuth from "next-auth";
 
 export const { auth } = NextAuth({
@@ -8,15 +7,11 @@ export const { auth } = NextAuth({
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = auth && auth.user;
-      const path = nextUrl.pathname;
-      const isProtectedRoute =
-        path.startsWith("/add-profile") ||
-        (path.startsWith("/profile/") && path.endsWith("/edit"));
-      if (isProtectedRoute && !isLoggedIn) {
-        return false; // Redirect to sign-in page
-      }
-      return true;
+      const isLoggedIn = !!(auth && auth.user);
+
+      if (nextUrl.pathname.startsWith("/auth")) return true;
+
+      return isLoggedIn; // false = redirect to /auth/signin, true = allow through
     },
   },
 });
