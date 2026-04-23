@@ -1,0 +1,47 @@
+/* signin.css */
+
+.signin-page {
+  min-height: calc(100vh - var(--navbar-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-bg);
+}
+
+/* ── "You haven't signed in yet" block ── */
+.signin-gate {
+  text-align: center;
+  margin-bottom: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.signin-gate-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.signin-gate-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.signin-gate-sub {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  max-width: 340px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.signin-loading {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
