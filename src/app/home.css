@@ -149,10 +149,9 @@
 
 /* ── Body: grid + macro panel ── */
 .cal-body {
-  display: grid;
-  grid-template-columns: 1fr 272px;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
-  align-items: start;
 }
 
 /* ── 7-day grid ── */
@@ -321,8 +320,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  position: sticky;
-  top: calc(var(--navbar-h) + var(--space-4));
+  /* removed: position: sticky; top: ... */
 }
 
 .macro-panel-header {

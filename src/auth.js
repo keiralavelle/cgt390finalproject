@@ -4,8 +4,8 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "../lib/prisma";
 
 export const {
-  auth,     // for server components & API routes
-  handlers, // for route handlers (GET, POST)
+  auth,
+  handlers,
 } = NextAuth({
   providers: [
     Credentials({
@@ -45,8 +45,7 @@ export const {
     signIn: "/auth/signin",
   },
   callbacks: {
-    // Route protection is handled entirely by proxy.js + auth-edge.js.
-    // This file only handles session/token shaping.
+    // Route protection is handled by proxy.js + auth-edge.js
     async session({ session, token }) {
       if (token) {
         session.user.id    = token.id;
