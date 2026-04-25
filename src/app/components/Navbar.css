@@ -194,3 +194,17 @@
     display: none;
   }
 }
+
+.mobile-divider {
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  margin: 6px 0;
+}
+
+.mobile-button {
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+}
