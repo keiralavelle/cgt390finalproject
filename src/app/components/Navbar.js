@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import logo from "../../assets/fork.png";
 import home from "../../assets/home.png";
 import search from "../../assets/search.png";
@@ -14,6 +15,7 @@ import grocery from "../../assets/grocery.png";
 const Navbar = () => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = [
     { name: "Home",         path: "/", icon: home, width: 22, height: 22 },
@@ -44,12 +46,18 @@ const Navbar = () => {
                   height={item.height}
                 />
               </div>    
-
               <span className="nav-tooltip">{item.name}</span>
             </Link>
           </li>
         ))}
       </ul>
+
+      <button
+        className="menu-toggle"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        ☰
+      </button>
 
       <div className="auth-section">
         {status === "loading" ? (
@@ -73,6 +81,20 @@ const Navbar = () => {
           </Link>
         )}
       </div>
+      {menuOpen && (
+        <div className="mobile-menu">
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.path}
+              className={pathname === item.path ? "mobile-link active" : "mobile-link"}
+              onClick={() => setMenuOpen(false)}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+      )}
     </nav>
   );
 };
