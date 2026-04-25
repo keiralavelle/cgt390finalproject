@@ -93,6 +93,35 @@ const Navbar = () => {
               {item.name}
             </Link>
           ))}
+          <hr className="mobile-divider" />
+          {status === "loading" ? (
+            <div className="mobile-link">Loading...</div>
+          ) : session ? (
+            <>
+              <Link
+                href="/account"
+                className="mobile-link"
+                onClick={() => setMenuOpen(false)}
+              >
+                Account
+              </Link>
+
+              <button
+                className="mobile-link mobile-button"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/auth/signin"
+              className="mobile-link"
+              onClick={() => setMenuOpen(false)}
+            >
+              Sign In
+            </Link>
+          )}
         </div>
       )}
     </nav>
