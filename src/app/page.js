@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X, Plus, Sparkles, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Plus, Sparkles, Calendar, Search, Copy } from "lucide-react";
 import "./home.css";
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -13,8 +13,6 @@ const enumToDay      = { MONDAY:"Monday",TUESDAY:"Tuesday",WEDNESDAY:"Wednesday"
 const mealTypeToEnum = { Breakfast:"BREAKFAST",Lunch:"LUNCH",Dinner:"DINNER",Snack:"SNACK" };
 const enumToMealType = { BREAKFAST:"Breakfast",LUNCH:"Lunch",DINNER:"Dinner",SNACK:"Snack" };
 
-// Sentinel title stored in DB for "no meal planned" slots.
-// Must match the value in /api/calendar/route.js
 const NO_MEAL_TITLE = "__NO_MEAL__";
 
 const getMondayOfWeek = (date) => {
@@ -31,7 +29,6 @@ const formatRange = (ws) => {
   return `${ws.toLocaleDateString(undefined,{month:"short",day:"numeric"})} – ${end.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})}`;
 };
 
-// Returns a Date for each of the 7 days starting at weekStart
 function getWeekDates(weekStart) {
   return DAYS.map((_, i) => {
     const d = new Date(weekStart);
@@ -46,7 +43,6 @@ function isSameDay(a, b) {
     a.getDate() === b.getDate();
 }
 
-// Each slot entry gets an isSkipped flag so the UI knows to render "No meal"
 function buildWeek(rows) {
   const week = {};
   for (const day of DAYS) { week[day] = {}; for (const t of MEAL_TYPES) week[day][t] = null; }
@@ -66,8 +62,6 @@ function buildWeek(rows) {
 }
 
 // ── Plate pie chart ──────────────────────────────────────────────
-// viewBox 80×56: plate centred at (40,28), fork at x≈9, knife at x≈70
-// Both utensils sit outside the plate rim (which ends at x≈19 and x≈61).
 function PlatePieChart({ planned, total }) {
   const pct = total > 0 ? planned / total : 0;
   const CX = 40, CY = 28, R_FOOD = 15, R_WELL = 17, R_RIM = 21;
@@ -89,7 +83,6 @@ function PlatePieChart({ planned, total }) {
   return (
     <svg className="plate-svg" width={80} height={56} viewBox="0 0 80 56"
       aria-label={`${planned} of ${total} meals planned`}>
-      {/* Fork — x range 7-11, well left of plate edge at x≈19 */}
       <g stroke="#b8b4ad" strokeWidth="1.1" strokeLinecap="round" fill="none">
         <line x1="7"  y1="8"  x2="7"  y2="18" />
         <line x1="9"  y1="8"  x2="9"  y2="18" />
@@ -97,24 +90,15 @@ function PlatePieChart({ planned, total }) {
         <path d="M7 18 Q9 21 11 18" />
         <line x1="9" y1="21" x2="9" y2="48" />
       </g>
-
-      {/* Knife — x range 68-73, well right of plate edge at x≈61 */}
       <g stroke="#b8b4ad" strokeWidth="1.1" strokeLinecap="round" fill="none">
         <path d="M70 8 Q73 14 70 22" />
         <line x1="70" y1="8" x2="70" y2="48" />
       </g>
-
-      {/* Plate shadow */}
       <circle cx={CX} cy={CY} r={R_RIM + 1} fill="#dedad4" />
-      {/* Outer rim */}
       <circle cx={CX} cy={CY} r={R_RIM} fill="#f5f3ef" />
-      {/* Inner rim ring */}
       <circle cx={CX} cy={CY} r={R_WELL} fill="none" stroke="#dbd8d2" strokeWidth="0.75" />
-      {/* Food area */}
       <circle cx={CX} cy={CY} r={R_FOOD} fill="#ede9e2" />
-      {/* Pie fill */}
       {fillPath && <path d={fillPath} fill={fillColor} style={{ transition: "fill 0.35s ease" }} />}
-      {/* Centre dot */}
       <circle cx={CX} cy={CY} r={1} fill="rgba(0,0,0,0.1)" />
     </svg>
   );
@@ -146,7 +130,6 @@ function MacroPanel({ week }) {
     for (const day of DAYS)
       for (const type of MEAL_TYPES) {
         const entry = week[day]?.[type];
-        // Only include real meals (not skipped sentinels) in macro estimates
         if (entry && !entry.isSkipped)
           result.push({ day, type, title: entry.title, ingredients: entry.ingredients });
       }
@@ -221,17 +204,31 @@ export default function Home() {
   const [error, setError]                   = useState("");
   const [modal, setModal]                   = useState(null);
   const [selectedMealId, setSelectedMealId] = useState("");
+
+  // Modal-only state — search + multi-day duplicate
+  const [search, setSearch]                 = useState("");
+  const [extraDays, setExtraDays]           = useState([]); // additional days to apply to
+  const [showDuplicate, setShowDuplicate]   = useState(false);
+  const [overwriteConfirm, setOverwriteConfirm] = useState(null); // { conflicts, onConfirm }
+
   const dateInputRef = useRef(null);
+  const searchRef = useRef(null);
 
   const weekKey   = useMemo(() => formatKey(weekStart), [weekStart]);
   const week      = useMemo(() => buildWeek(calRows), [calRows]);
   const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
   const today     = useMemo(() => new Date(), []);
 
-  // Count both real meals and intentionally-skipped slots
   const planned = useMemo(() =>
     DAYS.reduce((a, d) => a + MEAL_TYPES.filter(t => week[d]?.[t]).length, 0),
   [week]);
+
+  // Filtered meal list for the modal
+  const filteredMeals = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return meals;
+    return meals.filter(m => m.title.toLowerCase().includes(q));
+  }, [meals, search]);
 
   async function loadCalendar(ws) {
     setLoading(true); setError("");
@@ -248,7 +245,6 @@ export default function Home() {
     try {
       const res  = await fetch("/api/meals");
       const data = await res.json();
-      // Hide the sentinel meal from the picker
       setMeals((Array.isArray(data) ? data : []).filter(m => m.title !== NO_MEAL_TITLE));
     } catch { setMeals([]); }
   }
@@ -259,34 +255,82 @@ export default function Home() {
   function openModal(day, mealType) {
     setModal({ day, mealType });
     const entry = week[day]?.[mealType];
-    // Pre-select "NO_MEAL" if this slot is already skipped
     setSelectedMealId(entry?.isSkipped ? "NO_MEAL" : (entry?.mealId || ""));
+    setSearch("");
+    setExtraDays([]);
+    setShowDuplicate(false);
+    setOverwriteConfirm(null);
     setError("");
+    // Auto-focus the search box on open
+    setTimeout(() => searchRef.current?.focus(), 50);
+  }
+
+  function closeModal() {
+    setModal(null);
+    setOverwriteConfirm(null);
+  }
+
+  // POST a single slot. Used by both saveSlot and the bulk multi-day path.
+  async function postSlot({ day, mealType, mealId }) {
+    const res = await fetch("/api/calendar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mealId,
+        weekStart: weekKey,
+        day:       dayToEnum[day],
+        slot:      mealTypeToEnum[mealType],
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.error || `Failed to save ${day} ${mealType}`);
+    }
+    return res.json();
   }
 
   async function saveSlot() {
     const { day, mealType } = modal;
     if (!selectedMealId) return;
 
-    setSaving(true); setError("");
-    try {
-      // Send either "NO_MEAL" or a real mealId — the API handles both
-      const res = await fetch("/api/calendar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mealId:    selectedMealId,
-          weekStart: weekKey,
-          day:       dayToEnum[day],
-          slot:      mealTypeToEnum[mealType],
-        }),
+    // Build the list of target days: the slot the user opened + any extras
+    const targetDays = [day, ...extraDays.filter(d => d !== day)];
+
+    // Check for conflicts (existing non-skipped, non-empty slots being overwritten)
+    // Skip conflict-check for the originally-clicked slot since editing it is implicit.
+    const conflicts = extraDays
+      .filter(d => d !== day)
+      .filter(d => {
+        const existing = week[d]?.[mealType];
+        return existing && !existing.isSkipped;
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to save");
+
+    if (conflicts.length > 0 && !overwriteConfirm) {
+      setOverwriteConfirm({
+        conflicts,
+        onConfirm: () => doSave(targetDays),
+      });
+      return;
+    }
+
+    await doSave(targetDays);
+  }
+
+  async function doSave(targetDays) {
+    const { mealType } = modal;
+    setSaving(true); setError(""); setOverwriteConfirm(null);
+    try {
+      // Fire all saves in parallel — one POST per (day, mealType)
+      await Promise.all(targetDays.map(d =>
+        postSlot({ day: d, mealType, mealId: selectedMealId })
+      ));
       await loadCalendar(weekStart);
-      setModal(null);
-    } catch (e) { setError(e.message); }
-    finally { setSaving(false); }
+      closeModal();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function clearSlot(day, mealType) {
@@ -308,7 +352,12 @@ export default function Home() {
     if (!isNaN(picked)) setWeekStart(getMondayOfWeek(picked));
   }
 
+  function toggleExtraDay(d) {
+    setExtraDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+  }
+
   const isNoMeal = selectedMealId === "NO_MEAL";
+  const totalTargetCount = modal ? 1 + extraDays.filter(d => d !== modal.day).length : 1;
 
   return (
     <div className="cal-page">
@@ -395,15 +444,36 @@ export default function Home() {
 
       {/* ── Modal ── */}
       {modal && (
-        <div className="cal-modal-overlay" onClick={() => setModal(null)}>
+        <div className="cal-modal-overlay" onClick={closeModal}>
           <div className="cal-modal" onClick={e => e.stopPropagation()}>
             <div className="cal-modal-header">
               <h2>{modal.day} — {modal.mealType}</h2>
-              <button className="cal-modal-close" onClick={() => setModal(null)}><X size={16}/></button>
+              <button className="cal-modal-close" onClick={closeModal}><X size={16}/></button>
+            </div>
+
+            {/* Search box */}
+            <div className="cal-modal-search">
+              <Search size={14} className="cal-modal-search-icon" />
+              <input
+                ref={searchRef}
+                className="cal-modal-search-input"
+                placeholder="Search meals…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  className="cal-modal-search-clear"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear search"
+                >
+                  <X size={12}/>
+                </button>
+              )}
             </div>
 
             <div className="cal-modal-list">
-              {/* No meal — always at top */}
+              {/* No meal — always at top, never filtered */}
               <button
                 className={`cal-meal-option cal-meal-option--none ${isNoMeal ? "cal-meal-option--none-selected" : ""}`}
                 onClick={() => setSelectedMealId("NO_MEAL")}
@@ -416,7 +486,9 @@ export default function Home() {
 
               {meals.length === 0 ? (
                 <p className="cal-modal-empty">No meals yet — add some from the Add Meal page.</p>
-              ) : meals.map(meal => (
+              ) : filteredMeals.length === 0 ? (
+                <p className="cal-modal-empty">No meals match &ldquo;{search}&rdquo;.</p>
+              ) : filteredMeals.map(meal => (
                 <button
                   key={meal.id}
                   className={`cal-meal-option ${selectedMealId === meal.id ? "cal-meal-option--selected" : ""}`}
@@ -427,16 +499,82 @@ export default function Home() {
               ))}
             </div>
 
+            {/* Apply to other days — collapsed by default */}
+            <div className="cal-modal-duplicate">
+              <button
+                className="cal-duplicate-toggle"
+                onClick={() => setShowDuplicate(s => !s)}
+                type="button"
+              >
+                <Copy size={13} />
+                Apply to other days
+                {extraDays.length > 0 && <span className="cal-duplicate-count">{extraDays.length}</span>}
+              </button>
+              {showDuplicate && (
+                <div className="cal-duplicate-panel">
+                  <p className="cal-duplicate-help">
+                    Also save this {modal.mealType.toLowerCase()} to:
+                  </p>
+                  <div className="cal-duplicate-chips">
+                    {DAYS.filter(d => d !== modal.day).map(d => {
+                      const occupied = week[d]?.[modal.mealType] && !week[d]?.[modal.mealType]?.isSkipped;
+                      const active = extraDays.includes(d);
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          className={`cal-duplicate-chip ${active ? "cal-duplicate-chip--active" : ""} ${occupied ? "cal-duplicate-chip--occupied" : ""}`}
+                          onClick={() => toggleExtraDay(d)}
+                          title={occupied ? "Currently has a meal — will be replaced" : ""}
+                        >
+                          {d.slice(0, 3)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {error && <p className="cal-modal-error">{error}</p>}
 
+            {/* Overwrite confirmation */}
+            {overwriteConfirm && (
+              <div className="cal-modal-confirm">
+                <p className="cal-modal-confirm-text">
+                  This will replace the meal currently on{" "}
+                  <strong>{overwriteConfirm.conflicts.join(", ")}</strong>. Continue?
+                </p>
+                <div className="cal-modal-confirm-actions">
+                  <button
+                    className="cal-btn cal-btn--ghost"
+                    onClick={() => setOverwriteConfirm(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="cal-btn cal-btn--primary"
+                    onClick={() => overwriteConfirm.onConfirm()}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving…" : "Replace"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="cal-modal-actions">
-              <button className="cal-btn cal-btn--ghost" onClick={() => setModal(null)}>Cancel</button>
+              <button className="cal-btn cal-btn--ghost" onClick={closeModal}>Cancel</button>
               <button
                 className={`cal-btn ${isNoMeal ? "cal-btn--danger" : "cal-btn--primary"}`}
                 onClick={saveSlot}
-                disabled={saving || !selectedMealId}
+                disabled={saving || !selectedMealId || !!overwriteConfirm}
               >
-                {saving ? "Saving…" : isNoMeal ? "Mark as skipped" : "Save"}
+                {saving
+                  ? "Saving…"
+                  : isNoMeal
+                    ? `Mark as skipped${totalTargetCount > 1 ? ` (${totalTargetCount} days)` : ""}`
+                    : `Save${totalTargetCount > 1 ? ` to ${totalTargetCount} days` : ""}`}
               </button>
             </div>
           </div>
