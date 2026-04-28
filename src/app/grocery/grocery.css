@@ -502,14 +502,82 @@
 
 @media (max-width: 600px) {
   .grocery-page {
-    padding: var(--space-5) var(--space-4) var(--space-10);
+    width: 100%;
+    max-width: 100%;
+    padding: var(--space-5) var(--space-3) var(--space-10);
+    overflow-x: hidden;
   }
 
+  .grocery-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+  }
+
+  .grocery-title {
+    font-size: var(--text-xl);
+    line-height: 1.2;
+  }
+
+  .grocery-input-row,
   .grocery-import-row {
     flex-direction: column;
+    width: 100%;
+    gap: var(--space-2);
   }
 
-  .grocery-suggestions-grid {
-    grid-template-columns: 1fr;
+  .grocery-input,
+  .grocery-select,
+  .grocery-btn {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .grocery-btn {
+    padding: 12px var(--space-4);
+  }
+
+  .grocery-import {
+    padding: var(--space-3);
+  }
+
+  .grocery-list {
+    gap: var(--space-3);
+  }
+
+  .grocery-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: var(--space-1) var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .grocery-item-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.35;
+  }
+
+  .grocery-item-qty {
+    grid-column: 1;
+    white-space: normal;
+    font-size: var(--text-xs);
+  }
+
+  .grocery-delete-btn {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin-left: 0;
+  }
+
+  .grocery-clear-btn {
+    width: 100%;
+    margin-top: var(--space-5);
+    padding: 10px 0;
+    text-align: center;
   }
 }
