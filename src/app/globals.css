@@ -310,6 +310,13 @@ button, input, select, textarea { font-family: inherit; }
   color: var(--color-text);
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* ── Responsive helpers ──────────────────────────────── */
 @media (max-width: 600px) {
   .pp-page { padding: var(--space-5) var(--space-4) var(--space-10); }
