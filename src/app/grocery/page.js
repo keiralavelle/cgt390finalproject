@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Sparkles, DollarSign, ChefHat, X, Check, Plus } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, DollarSign, ChefHat, X, Check, Plus, Scale, Edit3 } from "lucide-react";
 import "./grocery.css";
 
 const TrashIcon = () => (
@@ -14,12 +15,18 @@ export default function GroceryList() {
   const [items, setItems] = useState([]);
   const [meals, setMeals] = useState([]);
   const [inputVal, setInputVal] = useState("");
+  const [inputQty, setInputQty] = useState(""); // manual quantity for new items
   const [selectedMealId, setSelectedMealId] = useState("");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [importing, setImporting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const inputRef = useRef(null);
+
+  // Inline quantity editing state — { id, value }
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Cost estimation state
   const [cost, setCost]               = useState(null);
@@ -32,6 +39,10 @@ export default function GroceryList() {
   const [suggestError, setSuggestError]       = useState("");
   const [savingTitles, setSavingTitles]       = useState(new Set()); // titles currently being saved
   const [savedTitles, setSavedTitles]         = useState(new Set()); // titles already saved
+
+  // AI quantity suggestions state
+  const [qtyLoading, setQtyLoading] = useState(false);
+  const [qtyError, setQtyError]     = useState("");
 
   async function loadItems() {
     try {
@@ -61,12 +72,14 @@ export default function GroceryList() {
       const res = await fetch("/api/grocery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, quantity: inputQty.trim() || undefined }),
       });
-      const item = await res.json();
       if (res.ok) {
-        setItems(prev => [...prev, item]);
+        // Reload the whole list — the server may have merged this item with an
+        // existing row (case-insensitive name match), so we can't just append.
+        await loadItems();
         setInputVal("");
+        setInputQty("");
         inputRef.current?.focus();
       }
     } catch { /* silent */ }
@@ -84,9 +97,9 @@ export default function GroceryList() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: meal.ingredients.map(name => ({ name })) }),
       });
-      const created = await res.json();
       if (res.ok) {
-        setItems(prev => [...prev, ...(Array.isArray(created) ? created : [])]);
+        // Reload list — server may have merged some imported items into existing rows
+        await loadItems();
         setSelectedMealId("");
       }
     } catch { /* silent */ }
@@ -108,6 +121,81 @@ export default function GroceryList() {
     setItems([]);
     setCost(null); // estimates are stale once list changes
     await Promise.all(ids.map(id => fetch(`/api/grocery/${id}`, { method: "DELETE" })));
+  }
+
+  // ── Inline quantity edit ────────────────────────────────────────
+  function startEditQty(item) {
+    setEditingId(item.id);
+    setEditValue(item.quantity || "");
+    setQtyError("");
+  }
+
+  function cancelEditQty() {
+    setEditingId(null);
+    setEditValue("");
+  }
+
+  async function saveEditQty() {
+    if (!editingId) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/grocery/${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: editValue }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setItems(prev => prev.map(i => (i.id === editingId ? updated : i)));
+      }
+    } catch { /* silent */ }
+    finally {
+      setSavingEdit(false);
+      setEditingId(null);
+      setEditValue("");
+    }
+  }
+
+  // ── AI quantity suggestions ─────────────────────────────────────
+  // Asks the LLM to suggest a sensible quantity for each item, then patches
+  // each item server-side. Uses no extra UI step — the suggestions are applied
+  // directly. The user can still edit any quantity inline afterwards.
+  async function suggestQuantities() {
+    if (!items.length) return;
+    setQtyLoading(true); setQtyError("");
+    try {
+      const res = await fetch("/api/grocery/quantities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}), // could pass weekStart in the future
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed");
+
+      const suggested = Array.isArray(data.quantities) ? data.quantities : [];
+      // Map suggestions back to item ids by case-insensitive name match
+      const byName = new Map(items.map(i => [i.name.toLowerCase(), i]));
+      const updates = suggested
+        .map(s => {
+          const item = byName.get(s.name.toLowerCase());
+          return item ? { id: item.id, quantity: s.quantity } : null;
+        })
+        .filter(Boolean);
+
+      // Patch all in parallel
+      await Promise.all(updates.map(u =>
+        fetch(`/api/grocery/${u.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: u.quantity }),
+        })
+      ));
+      await loadItems();
+    } catch (e) {
+      setQtyError(e.message);
+    } finally {
+      setQtyLoading(false);
+    }
   }
 
   // ── Cost estimation ─────────────────────────────────────────────
@@ -198,6 +286,13 @@ export default function GroceryList() {
             onChange={e => setInputVal(e.target.value)}
             disabled={adding}
           />
+          <input
+            className="grocery-input grocery-input--qty"
+            placeholder="Qty (optional)"
+            value={inputQty}
+            onChange={e => setInputQty(e.target.value)}
+            disabled={adding}
+          />
           <button className="grocery-btn grocery-btn--add" type="submit" disabled={adding || !inputVal.trim()}>
             {adding ? "Adding…" : "Add"}
           </button>
@@ -206,30 +301,43 @@ export default function GroceryList() {
         {/* ── Import from meal ── */}
         <div className="grocery-import">
           <div className="grocery-import-label">Add ingredients from a meal:</div>
-          <div className="grocery-import-row">
-            <select
-              className="grocery-select"
-              value={selectedMealId}
-              onChange={e => setSelectedMealId(e.target.value)}
-            >
-              <option value="">Choose a meal…</option>
-              {meals.map(m => (
-                <option key={m.id} value={m.id}>
-                  {m.title}
-                  {m.ingredients?.length ? ` (${m.ingredients.length} ingredients)` : ""}
-                </option>
-              ))}
-            </select>
-            <button
-              className="grocery-btn grocery-btn--import"
-              onClick={importFromMeal}
-              disabled={!selectedMealId || importing || !selectedMeal?.ingredients?.length}
-            >
-              {importing ? "Adding…" : "Add all"}
-            </button>
-          </div>
-          {selectedMeal && !selectedMeal.ingredients?.length && (
-            <p className="grocery-import-warn">This meal has no ingredients saved.</p>
+          {meals.length === 0 ? (
+            <div className="grocery-import-empty">
+              <p className="grocery-import-empty-text">
+                You haven't added any meals yet. Add some so you can import their ingredients here.
+              </p>
+              <Link href="/add-meal" className="grocery-import-empty-btn">
+                <Plus size={14}/> Add your first meal
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="grocery-import-row">
+                <select
+                  className="grocery-select"
+                  value={selectedMealId}
+                  onChange={e => setSelectedMealId(e.target.value)}
+                >
+                  <option value="">Choose a meal…</option>
+                  {meals.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.title}
+                      {m.ingredients?.length ? ` (${m.ingredients.length} ingredients)` : ""}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="grocery-btn grocery-btn--import"
+                  onClick={importFromMeal}
+                  disabled={!selectedMealId || importing || !selectedMeal?.ingredients?.length}
+                >
+                  {importing ? "Adding…" : "Add all"}
+                </button>
+              </div>
+              {selectedMeal && !selectedMeal.ingredients?.length && (
+                <p className="grocery-import-warn">This meal has no ingredients saved.</p>
+              )}
+            </>
           )}
         </div>
 
@@ -247,10 +355,52 @@ export default function GroceryList() {
             <ul className="grocery-list">
               {items.map(item => {
                 const itemCost = cost?.items?.find(c => c.name === item.name);
+                const isEditing = editingId === item.id;
                 return (
                   <li key={item.id} className={`grocery-item ${deletingId === item.id ? "grocery-item--deleting" : ""}`}>
                     <span className="grocery-item-name">{item.name}</span>
-                    {item.quantity && <span className="grocery-item-qty">{item.quantity}</span>}
+
+                    {isEditing ? (
+                      <span className="grocery-item-qty-edit">
+                        <input
+                          className="grocery-qty-input"
+                          value={editValue}
+                          onChange={e => setEditValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") saveEditQty();
+                            if (e.key === "Escape") cancelEditQty();
+                          }}
+                          placeholder="e.g. 1 lb"
+                          autoFocus
+                          disabled={savingEdit}
+                        />
+                        <button
+                          className="grocery-qty-btn grocery-qty-btn--save"
+                          onClick={saveEditQty}
+                          disabled={savingEdit}
+                          aria-label="Save quantity"
+                        >
+                          <Check size={12} />
+                        </button>
+                        <button
+                          className="grocery-qty-btn"
+                          onClick={cancelEditQty}
+                          disabled={savingEdit}
+                          aria-label="Cancel"
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        className={`grocery-item-qty-btn ${item.quantity ? "" : "grocery-item-qty-btn--empty"}`}
+                        onClick={() => startEditQty(item)}
+                        title="Edit quantity"
+                      >
+                        {item.quantity || (<><Edit3 size={11} /> Add qty</>)}
+                      </button>
+                    )}
+
                     {itemCost && (
                       <span className="grocery-item-cost">
                         ${Number(itemCost.estimatedCost).toFixed(2)}
@@ -286,6 +436,15 @@ export default function GroceryList() {
             <div className="grocery-ai-actions">
               <button
                 className="grocery-ai-btn"
+                onClick={suggestQuantities}
+                disabled={qtyLoading}
+              >
+                <Scale size={14} />
+                {qtyLoading ? "Thinking…" : "Suggest quantities"}
+              </button>
+
+              <button
+                className="grocery-ai-btn"
                 onClick={estimateCost}
                 disabled={costLoading}
               >
@@ -306,6 +465,8 @@ export default function GroceryList() {
                   : suggestions.length ? "Get more suggestions" : "Suggest meals"}
               </button>
             </div>
+
+            {qtyError && <p className="grocery-ai-error">⚠ {qtyError}</p>}
 
             {/* Cost result */}
             {costError && <p className="grocery-ai-error">⚠ {costError}</p>}

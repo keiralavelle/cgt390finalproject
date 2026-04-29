@@ -340,6 +340,13 @@
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--color-text);
+  flex-wrap: wrap;
+}
+
+.macro-panel-range {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-muted);
 }
 
 .macro-estimate-btn {
@@ -378,16 +385,28 @@
 .macro-tab:hover { background: var(--color-primary-light); color: var(--color-primary); border-color: var(--color-primary-mid); }
 .macro-tab--active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 
-.macro-kcal { display: flex; align-items: baseline; gap: var(--space-2); }
+.macro-kcal-row { display: flex; align-items: baseline; }
+.macro-kcal { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
 .macro-kcal-num { font-size: var(--text-3xl); font-weight: 700; color: var(--color-text); line-height: 1; }
-.macro-kcal-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+.macro-kcal-sep { font-size: var(--text-xl); font-weight: 500; color: var(--color-text-muted); line-height: 1; margin: 0 2px; }
+.macro-kcal-target { font-size: var(--text-lg); font-weight: 600; color: var(--color-text-muted); line-height: 1; }
+.macro-kcal-label { font-size: var(--text-xs); color: var(--color-text-muted); margin-left: var(--space-2); }
 
 .macro-bars { display: flex; flex-direction: column; gap: var(--space-2); }
 .macro-bar-row { display: flex; align-items: center; gap: var(--space-2); }
 .macro-bar-label { font-size: var(--text-xs); color: var(--color-text-secondary); width: 44px; flex-shrink: 0; }
 .macro-bar-track { flex: 1; height: 5px; background: var(--color-border); border-radius: var(--radius-pill); overflow: hidden; }
 .macro-bar-fill { height: 100%; border-radius: var(--radius-pill); transition: width 0.4s ease; }
-.macro-bar-value { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); width: 34px; text-align: right; flex-shrink: 0; }
+.macro-bar-value {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 78px;
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.macro-bar-value-sep { color: var(--color-text-muted); margin: 0 2px; font-weight: 500; }
 .macro-note { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; line-height: 1.4; font-style: italic; }
 
 /* ── Modal ── */
@@ -467,6 +486,38 @@
 .cal-modal-search-clear:hover { color: var(--color-text); background: var(--color-text-muted); }
 
 .cal-modal-empty { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; padding: var(--space-2) 0; text-align: center; }
+
+/* Empty-state with a call-to-action button — used when the user has zero meals */
+.cal-modal-empty-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+}
+.cal-modal-empty-text {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.cal-modal-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition);
+}
+.cal-modal-empty-btn:hover {
+  background: var(--color-primary-hover);
+  color: #fff;
+}
 .cal-modal-list { display: flex; flex-direction: column; gap: var(--space-2); overflow-y: auto; max-height: 320px; padding-right: 2px; }
 
 .cal-modal-divider {

@@ -2,6 +2,53 @@
 import { prisma } from "../../../../lib/prisma";
 import { auth } from "../../../auth";
 
+// Combine two free-text quantities. Both can be null/empty.
+// We don't try to parse units — just concatenate distinct values
+// so the user sees "1 lb + 2 lbs" and can clean it up if they want.
+function mergeQuantities(existing, incoming) {
+  const a = (existing || "").trim();
+  const b = (incoming || "").trim();
+  if (!a && !b) return null;
+  if (!a) return b;
+  if (!b) return a;
+  if (a.toLowerCase() === b.toLowerCase()) return a;
+  return `${a} + ${b}`;
+}
+
+// Find an existing item by case-insensitive name match.
+// Returns the row or null.
+async function findExistingByName(userId, name) {
+  return prisma.groceryItem.findFirst({
+    where: {
+      userId,
+      // Postgres case-insensitive match
+      name: { equals: name.trim(), mode: "insensitive" },
+    },
+  });
+}
+
+// Add or merge a single item. Returns the resulting row.
+async function addOrMerge(userId, name, quantity) {
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+
+  const existing = await findExistingByName(userId, trimmed);
+  if (existing) {
+    const mergedQty = mergeQuantities(existing.quantity, quantity);
+    return prisma.groceryItem.update({
+      where: { id: existing.id },
+      data: { quantity: mergedQty },
+    });
+  }
+  return prisma.groceryItem.create({
+    data: {
+      name: trimmed,
+      quantity: quantity?.trim() || null,
+      userId,
+    },
+  });
+}
+
 export async function GET() {
   try {
     const session = await auth();
@@ -32,29 +79,25 @@ export async function POST(req) {
 
     const body = await req.json();
 
-    // Supports both a single item { name, quantity? }
-    // and a bulk import { items: [{ name, quantity? }, ...] }
+    // Bulk: { items: [{ name, quantity? }, ...] }
     if (Array.isArray(body.items)) {
-      const created = await Promise.all(
-        body.items
-          .filter((i) => i.name?.trim())
-          .map((i) =>
-            prisma.groceryItem.create({
-              data: { name: i.name.trim(), quantity: i.quantity?.trim() || null, userId: user.id },
-            })
-          )
-      );
-      return Response.json(created, { status: 201 });
+      // Process sequentially so two items with the same name in one batch
+      // also merge correctly (parallel would race on the upsert).
+      const results = [];
+      for (const i of body.items) {
+        if (!i?.name?.trim()) continue;
+        const row = await addOrMerge(user.id, i.name, i.quantity);
+        if (row) results.push(row);
+      }
+      return Response.json(results, { status: 201 });
     }
 
+    // Single: { name, quantity? }
     if (!body.name?.trim()) {
       return Response.json({ error: "Item name is required" }, { status: 400 });
     }
 
-    const item = await prisma.groceryItem.create({
-      data: { name: body.name.trim(), quantity: body.quantity?.trim() || null, userId: user.id },
-    });
-
+    const item = await addOrMerge(user.id, body.name, body.quantity);
     return Response.json(item, { status: 201 });
   } catch (error) {
     console.error("POST /api/grocery failed:", error);
