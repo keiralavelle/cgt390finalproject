@@ -226,6 +226,7 @@ export type MealOrderByWithRelationInput = {
 
 export type MealWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  userId_title?: Prisma.MealUserIdTitleCompoundUniqueInput
   AND?: Prisma.MealWhereInput | Prisma.MealWhereInput[]
   OR?: Prisma.MealWhereInput[]
   NOT?: Prisma.MealWhereInput | Prisma.MealWhereInput[]
@@ -239,7 +240,7 @@ export type MealWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Meal"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   calendarMeals?: Prisma.CalendarMealListRelationFilter
-}, "id">
+}, "id" | "userId_title">
 
 export type MealOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -374,6 +375,11 @@ export type StringNullableListFilter<$PrismaModel = never> = {
   hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
   hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
   isEmpty?: boolean
+}
+
+export type MealUserIdTitleCompoundUniqueInput = {
+  userId: string
+  title: string
 }
 
 export type MealCountOrderByAggregateInput = {

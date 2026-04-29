@@ -477,10 +477,6 @@ export type CalendarMealUncheckedUpdateManyWithoutMealNestedInput = {
   deleteMany?: Prisma.CalendarMealScalarWhereInput | Prisma.CalendarMealScalarWhereInput[]
 }
 
-export type EnumWeekDayFieldUpdateOperationsInput = {
-  set?: $Enums.WeekDay
-}
-
 export type EnumMealSlotFieldUpdateOperationsInput = {
   set?: $Enums.MealSlot
 }

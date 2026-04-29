@@ -29,6 +29,7 @@ export type UserMinAggregateOutputType = {
   name: string | null
   email: string | null
   password: string | null
+  weekStartDay: $Enums.WeekDay | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -38,6 +39,7 @@ export type UserMaxAggregateOutputType = {
   name: string | null
   email: string | null
   password: string | null
+  weekStartDay: $Enums.WeekDay | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -47,6 +49,7 @@ export type UserCountAggregateOutputType = {
   name: number
   email: number
   password: number
+  weekStartDay: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -58,6 +61,7 @@ export type UserMinAggregateInputType = {
   name?: true
   email?: true
   password?: true
+  weekStartDay?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -67,6 +71,7 @@ export type UserMaxAggregateInputType = {
   name?: true
   email?: true
   password?: true
+  weekStartDay?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -76,6 +81,7 @@ export type UserCountAggregateInputType = {
   name?: true
   email?: true
   password?: true
+  weekStartDay?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -158,6 +164,7 @@ export type UserGroupByOutputType = {
   name: string | null
   email: string
   password: string | null
+  weekStartDay: $Enums.WeekDay
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -188,6 +195,7 @@ export type UserWhereInput = {
   name?: Prisma.StringNullableFilter<"User"> | string | null
   email?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringNullableFilter<"User"> | string | null
+  weekStartDay?: Prisma.EnumWeekDayFilter<"User"> | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   meals?: Prisma.MealListRelationFilter
@@ -201,6 +209,7 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrderInput | Prisma.SortOrder
+  weekStartDay?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   meals?: Prisma.MealOrderByRelationAggregateInput
@@ -217,6 +226,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   name?: Prisma.StringNullableFilter<"User"> | string | null
   password?: Prisma.StringNullableFilter<"User"> | string | null
+  weekStartDay?: Prisma.EnumWeekDayFilter<"User"> | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   meals?: Prisma.MealListRelationFilter
@@ -230,6 +240,7 @@ export type UserOrderByWithAggregationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrderInput | Prisma.SortOrder
+  weekStartDay?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -245,6 +256,7 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   email?: Prisma.StringWithAggregatesFilter<"User"> | string
   password?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  weekStartDay?: Prisma.EnumWeekDayWithAggregatesFilter<"User"> | $Enums.WeekDay
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -254,6 +266,7 @@ export type UserCreateInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
@@ -267,6 +280,7 @@ export type UserUncheckedCreateInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
@@ -280,6 +294,7 @@ export type UserUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
@@ -293,6 +308,7 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
@@ -306,6 +322,7 @@ export type UserCreateManyInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -315,6 +332,7 @@ export type UserUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -324,6 +342,7 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -333,6 +352,7 @@ export type UserCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  weekStartDay?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -342,6 +362,7 @@ export type UserMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  weekStartDay?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -351,6 +372,7 @@ export type UserMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  weekStartDay?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -366,6 +388,10 @@ export type StringFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type EnumWeekDayFieldUpdateOperationsInput = {
+  set?: $Enums.WeekDay
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -433,6 +459,7 @@ export type UserCreateWithoutMealsInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   groceries?: Prisma.GroceryItemCreateNestedManyWithoutUserInput
@@ -445,6 +472,7 @@ export type UserUncheckedCreateWithoutMealsInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   groceries?: Prisma.GroceryItemUncheckedCreateNestedManyWithoutUserInput
@@ -473,6 +501,7 @@ export type UserUpdateWithoutMealsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groceries?: Prisma.GroceryItemUpdateManyWithoutUserNestedInput
@@ -485,6 +514,7 @@ export type UserUncheckedUpdateWithoutMealsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groceries?: Prisma.GroceryItemUncheckedUpdateManyWithoutUserNestedInput
@@ -497,6 +527,7 @@ export type UserCreateWithoutGroceriesInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
@@ -509,6 +540,7 @@ export type UserUncheckedCreateWithoutGroceriesInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
@@ -537,6 +569,7 @@ export type UserUpdateWithoutGroceriesInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
@@ -549,6 +582,7 @@ export type UserUncheckedUpdateWithoutGroceriesInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
@@ -561,6 +595,7 @@ export type UserCreateWithoutCalendarMealsInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
@@ -573,6 +608,7 @@ export type UserUncheckedCreateWithoutCalendarMealsInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
@@ -601,6 +637,7 @@ export type UserUpdateWithoutCalendarMealsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
@@ -613,6 +650,7 @@ export type UserUncheckedUpdateWithoutCalendarMealsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
@@ -625,6 +663,7 @@ export type UserCreateWithoutSessionsInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealCreateNestedManyWithoutUserInput
@@ -637,6 +676,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   name?: string | null
   email: string
   password?: string | null
+  weekStartDay?: $Enums.WeekDay
   createdAt?: Date | string
   updatedAt?: Date | string
   meals?: Prisma.MealUncheckedCreateNestedManyWithoutUserInput
@@ -665,6 +705,7 @@ export type UserUpdateWithoutSessionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUpdateManyWithoutUserNestedInput
@@ -677,6 +718,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  weekStartDay?: Prisma.EnumWeekDayFieldUpdateOperationsInput | $Enums.WeekDay
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   meals?: Prisma.MealUncheckedUpdateManyWithoutUserNestedInput
@@ -747,6 +789,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   email?: boolean
   password?: boolean
+  weekStartDay?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   meals?: boolean | Prisma.User$mealsArgs<ExtArgs>
@@ -761,6 +804,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   email?: boolean
   password?: boolean
+  weekStartDay?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -770,6 +814,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   email?: boolean
   password?: boolean
+  weekStartDay?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -779,11 +824,12 @@ export type UserSelectScalar = {
   name?: boolean
   email?: boolean
   password?: boolean
+  weekStartDay?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "weekStartDay" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   meals?: boolean | Prisma.User$mealsArgs<ExtArgs>
   groceries?: boolean | Prisma.User$groceriesArgs<ExtArgs>
@@ -807,6 +853,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string | null
     email: string
     password: string | null
+    weekStartDay: $Enums.WeekDay
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1240,6 +1287,7 @@ export interface UserFieldRefs {
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly email: Prisma.FieldRef<"User", 'String'>
   readonly password: Prisma.FieldRef<"User", 'String'>
+  readonly weekStartDay: Prisma.FieldRef<"User", 'WeekDay'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

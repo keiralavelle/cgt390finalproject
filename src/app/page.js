@@ -1,12 +1,25 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, X, Plus, Sparkles, Calendar, Search, Copy } from "lucide-react";
 import "./home.css";
 
-const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+// Canonical day order — matches the WeekDay enum in Prisma. Used for API payloads,
+// server lookups, and as the storage order. Display order is computed from the
+// user's preferred week-start day (see displayDays in Home).
+const CANONICAL_DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const MEAL_TYPES = ["Breakfast","Lunch","Dinner","Snack"];
 const TOTAL_SLOTS = 28;
+
+// Reorder the canonical list so the chosen day appears first.
+// e.g. orderDaysFromStart("SUNDAY") => ["Sunday", "Monday", ..., "Saturday"]
+function orderDaysFromStart(weekStartEnum) {
+  const startDay = weekStartEnum === "SUNDAY" ? "Sunday" : "Monday";
+  const idx = CANONICAL_DAYS.indexOf(startDay);
+  if (idx <= 0) return CANONICAL_DAYS;
+  return [...CANONICAL_DAYS.slice(idx), ...CANONICAL_DAYS.slice(0, idx)];
+}
 
 const dayToEnum      = { Monday:"MONDAY",Tuesday:"TUESDAY",Wednesday:"WEDNESDAY",Thursday:"THURSDAY",Friday:"FRIDAY",Saturday:"SATURDAY",Sunday:"SUNDAY" };
 const enumToDay      = { MONDAY:"Monday",TUESDAY:"Tuesday",WEDNESDAY:"Wednesday",THURSDAY:"Thursday",FRIDAY:"Friday",SATURDAY:"Saturday",SUNDAY:"Sunday" };
@@ -15,9 +28,19 @@ const enumToMealType = { BREAKFAST:"Breakfast",LUNCH:"Lunch",DINNER:"Dinner",SNA
 
 const NO_MEAL_TITLE = "__NO_MEAL__";
 
-const getMondayOfWeek = (date) => {
+// Get the start of the week containing `date`, anchored to the user's
+// preferred start day (MONDAY or SUNDAY).
+//   MONDAY: roll back to the most recent Mon (Sun=−6, Mon=0, Tue=−1…)
+//   SUNDAY: roll back to the most recent Sun (just zero out d.getDay())
+const getStartOfWeek = (date, weekStartEnum = "MONDAY") => {
   const d = new Date(date);
-  const diff = d.getDay() === 0 ? -6 : 1 - d.getDay();
+  const dow = d.getDay(); // 0=Sun, 1=Mon, …, 6=Sat
+  let diff;
+  if (weekStartEnum === "SUNDAY") {
+    diff = -dow;
+  } else {
+    diff = dow === 0 ? -6 : 1 - dow;
+  }
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -30,7 +53,7 @@ const formatRange = (ws) => {
 };
 
 function getWeekDates(weekStart) {
-  return DAYS.map((_, i) => {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + i);
     return d;
@@ -45,7 +68,7 @@ function isSameDay(a, b) {
 
 function buildWeek(rows) {
   const week = {};
-  for (const day of DAYS) { week[day] = {}; for (const t of MEAL_TYPES) week[day][t] = null; }
+  for (const day of CANONICAL_DAYS) { week[day] = {}; for (const t of MEAL_TYPES) week[day][t] = null; }
   for (const row of rows) {
     const day = enumToDay[row.day];
     const t   = enumToMealType[row.slot];
@@ -105,7 +128,7 @@ function PlatePieChart({ planned, total }) {
 }
 
 // ── Macro bar ────────────────────────────────────────────────────
-function MacroBar({ label, value, max, color }) {
+function MacroBar({ label, value, max, color, unit = "g" }) {
   const pct = Math.min(100, Math.round((value / max) * 100));
   return (
     <div className="macro-bar-row">
@@ -113,21 +136,32 @@ function MacroBar({ label, value, max, color }) {
       <div className="macro-bar-track">
         <div className="macro-bar-fill" style={{ width: `${pct}%`, background: color }} />
       </div>
-      <span className="macro-bar-value">{value}g</span>
+      <span className="macro-bar-value">
+        {value}<span className="macro-bar-value-sep">/</span>{max}{unit}
+      </span>
     </div>
   );
 }
 
 // ── Macro panel ──────────────────────────────────────────────────
-function MacroPanel({ week }) {
+function MacroPanel({ week, weekStart, weekRange, displayDays }) {
   const [macros, setMacros]   = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [view, setView]       = useState("week");
 
+  // Reset cached macros when the user navigates to a different week —
+  // the previous week's numbers are no longer relevant.
+  useEffect(() => {
+    setMacros(null);
+    setError("");
+    setView("week");
+  }, [weekStart]);
+
   const plannedMeals = useMemo(() => {
     const result = [];
-    for (const day of DAYS)
+    // Collection order doesn't matter — data is keyed by day name.
+    for (const day of CANONICAL_DAYS)
       for (const type of MEAL_TYPES) {
         const entry = week[day]?.[type];
         if (entry && !entry.isSkipped)
@@ -140,7 +174,12 @@ function MacroPanel({ week }) {
     if (!plannedMeals.length) return;
     setLoading(true); setError("");
     try {
-      const res  = await fetch("/api/macros", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ meals: plannedMeals }) });
+      const res  = await fetch("/api/macros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Pass weekStart so the prompt can say "Week of Apr 28 – May 4"
+        body: JSON.stringify({ meals: plannedMeals, weekStart }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed");
       setMacros(data);
@@ -153,10 +192,21 @@ function MacroPanel({ week }) {
     return view === "week" ? macros.week : (macros.days?.[view] || null);
   }, [macros, view]);
 
+  // Reasonable daily reference targets for an adult (used as bar maxes)
+  // Week column scales these by 7. These are display-only references —
+  // the bars now show value/max so users see what they're being compared to.
+  const targets = view === "week"
+    ? { calories: 14000, protein: 1050, carbs: 2275, fat: 1246, fiber: 210 }
+    : { calories: 2000, protein: 150,   carbs: 325,  fat: 178,  fiber: 30 };
+
   return (
     <div className="macro-panel">
       <div className="macro-panel-header">
-        <div className="macro-panel-title"><Sparkles size={15} /> AI Macro Estimate</div>
+        <div className="macro-panel-title">
+          <Sparkles size={15} />
+          <span>AI Macro Estimate</span>
+          {weekRange && <span className="macro-panel-range">· {weekRange}</span>}
+        </div>
         <button className="macro-estimate-btn" onClick={estimate} disabled={loading || !plannedMeals.length}>
           {loading ? "Estimating…" : macros ? "Re-estimate" : "Estimate"}
         </button>
@@ -167,21 +217,25 @@ function MacroPanel({ week }) {
         <>
           <div className="macro-tabs">
             <button className={`macro-tab ${view==="week"?"macro-tab--active":""}`} onClick={()=>setView("week")}>Week</button>
-            {DAYS.map(d=>(
+            {displayDays.map(d=>(
               <button key={d} className={`macro-tab ${view===d?"macro-tab--active":""}`} onClick={()=>setView(d)}>{d.slice(0,3)}</button>
             ))}
           </div>
           {displayMacros ? (
             <div className="macro-data">
-              <div className="macro-kcal">
-                <span className="macro-kcal-num">{displayMacros.calories}</span>
-                <span className="macro-kcal-label">kcal {view==="week"?"/ week":"/ day"}</span>
+              <div className="macro-kcal-row">
+                <div className="macro-kcal">
+                  <span className="macro-kcal-num">{displayMacros.calories}</span>
+                  <span className="macro-kcal-sep">/</span>
+                  <span className="macro-kcal-target">{targets.calories}</span>
+                  <span className="macro-kcal-label">kcal {view==="week"?"/ week":"/ day"}</span>
+                </div>
               </div>
               <div className="macro-bars">
-                <MacroBar label="Protein" value={displayMacros.protein} max={view==="week"?1000:150} color="#4a7c59" />
-                <MacroBar label="Carbs"   value={displayMacros.carbs}   max={view==="week"?2200:325} color="#e6a817" />
-                <MacroBar label="Fat"     value={displayMacros.fat}     max={view==="week"?1200:178} color="#c84b2f" />
-                <MacroBar label="Fiber"   value={displayMacros.fiber}   max={view==="week"?210:30}   color="#7a9e87" />
+                <MacroBar label="Protein" value={displayMacros.protein} max={targets.protein} color="#4a7c59" />
+                <MacroBar label="Carbs"   value={displayMacros.carbs}   max={targets.carbs}   color="#e6a817" />
+                <MacroBar label="Fat"     value={displayMacros.fat}     max={targets.fat}     color="#c84b2f" />
+                <MacroBar label="Fiber"   value={displayMacros.fiber}   max={targets.fiber}   color="#7a9e87" />
               </div>
               {displayMacros.note && <p className="macro-note">{displayMacros.note}</p>}
             </div>
@@ -196,7 +250,12 @@ function MacroPanel({ week }) {
 
 // ── Main page ────────────────────────────────────────────────────
 export default function Home() {
-  const [weekStart, setWeekStart]           = useState(getMondayOfWeek(new Date()));
+  // Default to MONDAY until preferences load. Once they load, recompute
+  // weekStart so the calendar anchors correctly. We use a separate
+  // `prefsLoaded` flag so we don't render an incorrect week briefly.
+  const [weekStartDay, setWeekStartDay]     = useState("MONDAY");
+  const [prefsLoaded, setPrefsLoaded]       = useState(false);
+  const [weekStart, setWeekStart]           = useState(() => getStartOfWeek(new Date(), "MONDAY"));
   const [calRows, setCalRows]               = useState([]);
   const [meals, setMeals]                   = useState([]);
   const [loading, setLoading]               = useState(true);
@@ -219,8 +278,12 @@ export default function Home() {
   const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
   const today     = useMemo(() => new Date(), []);
 
+  // Days in the order the user wants to see them — drives calendar grid
+  // and macro tabs. CANONICAL_DAYS is still used for data lookups.
+  const displayDays = useMemo(() => orderDaysFromStart(weekStartDay), [weekStartDay]);
+
   const planned = useMemo(() =>
-    DAYS.reduce((a, d) => a + MEAL_TYPES.filter(t => week[d]?.[t]).length, 0),
+    CANONICAL_DAYS.reduce((a, d) => a + MEAL_TYPES.filter(t => week[d]?.[t]).length, 0),
   [week]);
 
   // Filtered meal list for the modal
@@ -229,6 +292,24 @@ export default function Home() {
     if (!q) return meals;
     return meals.filter(m => m.title.toLowerCase().includes(q));
   }, [meals, search]);
+
+  // Load week-start preference once on mount, then re-anchor weekStart.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadPrefs() {
+      try {
+        const res  = await fetch("/api/account/preferences");
+        const data = await res.json();
+        if (!cancelled && res.ok && data?.weekStartDay) {
+          setWeekStartDay(data.weekStartDay);
+          setWeekStart(getStartOfWeek(new Date(), data.weekStartDay));
+        }
+      } catch { /* keep default MONDAY */ }
+      finally { if (!cancelled) setPrefsLoaded(true); }
+    }
+    loadPrefs();
+    return () => { cancelled = true; };
+  }, []);
 
   async function loadCalendar(ws) {
     setLoading(true); setError("");
@@ -349,7 +430,7 @@ export default function Home() {
 
   function handleDatePick(e) {
     const picked = new Date(`${e.target.value}T12:00:00`);
-    if (!isNaN(picked)) setWeekStart(getMondayOfWeek(picked));
+    if (!isNaN(picked)) setWeekStart(getStartOfWeek(picked, weekStartDay));
   }
 
   function toggleExtraDay(d) {
@@ -369,7 +450,7 @@ export default function Home() {
           <button className="cal-nav-btn" onClick={() => setWeekStart(w => addWeeks(w,-1))}><ChevronLeft size={16}/></button>
           <div className="cal-week-label">
             <span className="cal-week-range">{formatRange(weekStart)}</span>
-            <button className="cal-today-btn" onClick={() => setWeekStart(getMondayOfWeek(new Date()))}>Today</button>
+            <button className="cal-today-btn" onClick={() => setWeekStart(getStartOfWeek(new Date(), weekStartDay))}>Today</button>
           </div>
           <button className="cal-nav-btn" onClick={() => setWeekStart(w => addWeeks(w,1))}><ChevronRight size={16}/></button>
           <div className="cal-datepicker-wrap">
@@ -396,7 +477,7 @@ export default function Home() {
           <div className="cal-loading">Loading…</div>
         ) : (
           <div className="cal-grid">
-            {DAYS.map((day, dayIdx) => {
+            {displayDays.map((day, dayIdx) => {
               const dayDate  = weekDates[dayIdx];
               const isToday  = isSameDay(dayDate, today);
               const dateNum  = dayDate.getDate();
@@ -439,7 +520,7 @@ export default function Home() {
             ); })}
           </div>
         )}
-        {!loading && <MacroPanel week={week}/>}
+        {!loading && <MacroPanel week={week} weekStart={weekKey} weekRange={formatRange(weekStart)} displayDays={displayDays} />}
       </div>
 
       {/* ── Modal ── */}
@@ -485,7 +566,12 @@ export default function Home() {
               <div className="cal-modal-divider"/>
 
               {meals.length === 0 ? (
-                <p className="cal-modal-empty">No meals yet — add some from the Add Meal page.</p>
+                <div className="cal-modal-empty-cta">
+                  <p className="cal-modal-empty-text">You haven't added any meals yet.</p>
+                  <Link href="/add-meal" className="cal-modal-empty-btn" onClick={closeModal}>
+                    <Plus size={14}/> Add your first meal
+                  </Link>
+                </div>
               ) : filteredMeals.length === 0 ? (
                 <p className="cal-modal-empty">No meals match &ldquo;{search}&rdquo;.</p>
               ) : filteredMeals.map(meal => (
@@ -516,7 +602,7 @@ export default function Home() {
                     Also save this {modal.mealType.toLowerCase()} to:
                   </p>
                   <div className="cal-duplicate-chips">
-                    {DAYS.filter(d => d !== modal.day).map(d => {
+                    {displayDays.filter(d => d !== modal.day).map(d => {
                       const occupied = week[d]?.[modal.mealType] && !week[d]?.[modal.mealType]?.isSkipped;
                       const active = extraDays.includes(d);
                       return (
